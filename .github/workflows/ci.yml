@@ -31,10 +31,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 24
           cache: npm
@@ -99,7 +99,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
@@ -109,7 +109,7 @@ jobs:
           coverage: none
 
       - name: Cache Composer packages
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.composer/cache/files
           key: composer-${{ runner.os }}-${{ hashFiles('apps/api/composer.lock') }}
@@ -133,10 +133,12 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 2
 
       - name: Validate Docker Compose
         run: docker compose config --quiet
 
       - name: Check repository whitespace
-        run: git diff-tree --check --root HEAD
+        run: git diff --check HEAD^ HEAD

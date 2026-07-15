@@ -14,4 +14,3 @@ Describe the user-facing and technical outcome.
 ## Promotion
 
 Target branches follow: `feat/*` → `dev` → `stage` → `main`.
-
