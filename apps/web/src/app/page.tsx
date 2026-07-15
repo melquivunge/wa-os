@@ -22,6 +22,7 @@ import {
   UsersRound,
 } from "lucide-react";
 import type { CSSProperties } from "react";
+import { requireAuthenticatedUser } from "@/lib/server-auth";
 
 const navItems = [
   { label: "Visão geral", icon: LayoutDashboard, active: true },
@@ -47,7 +48,9 @@ const campaigns = [
 
 const chart = [32, 44, 38, 57, 49, 64, 72, 61, 78, 69, 86, 82, 96, 77];
 
-export default function Home() {
+export default async function Home() {
+  await requireAuthenticatedUser();
+
   const numberFormatter = new Intl.NumberFormat("pt-BR");
   const formattedDate = new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "2-digit", month: "long" })
     .format(new Date(2026, 6, 14)).toLocaleUpperCase("pt-BR");

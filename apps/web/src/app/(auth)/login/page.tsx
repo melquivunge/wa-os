@@ -28,7 +28,6 @@ export default function LoginPage() {
         remember: form.get("remember") === "on",
       });
       router.replace("/");
-      router.refresh();
     } catch (caught) {
       const apiError = caught instanceof ApiError ? caught : new ApiError("Ocorreu um erro inesperado.", null);
       setError(apiError.message);
