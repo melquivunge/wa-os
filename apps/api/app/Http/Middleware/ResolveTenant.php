@@ -20,7 +20,8 @@ class ResolveTenant
             ->with('organization')
             ->orderBy('organization_id');
 
-        $requestedId = $request->header('X-Organization-ID') ?? $request->session()->get('active_organization_id');
+        $requestedId = $request->header('X-Organization-ID')
+            ?? ($request->hasSession() ? $request->session()->get('active_organization_id') : null);
 
         if ($requestedId !== null) {
             $query->where('organization_id', $requestedId);
@@ -32,7 +33,9 @@ class ResolveTenant
             return new JsonResponse(['message' => 'Organization not found.'], 404);
         }
 
-        $request->session()->put('active_organization_id', $membership->organization_id);
+        if ($request->hasSession()) {
+            $request->session()->put('active_organization_id', $membership->organization_id);
+        }
 
         $this->context->set($membership);
         $request->attributes->set(TenantContext::class, $this->context);

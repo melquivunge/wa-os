@@ -163,4 +163,12 @@ export const campaignApi = {
       body: JSON.stringify(input),
     });
   },
+
+  async transition(id: string, action: "pause" | "resume" | "cancel") {
+    await prepareCookieSession();
+    return request<{ data: Campaign }>(`/api/v1/campaigns/${id}/${action}`, {
+      method: "POST",
+      body: JSON.stringify({}),
+    });
+  },
 };
