@@ -51,6 +51,11 @@ class CrmFoundationTest extends TestCase
             ->assertJsonCount(1, 'data')
             ->assertJsonPath('data.0.name', 'Owned Quality')
             ->assertJsonMissing(['name' => 'Foreign Quality']);
+
+        $this->actingAs($user)->withHeader('X-Organization-ID', $organization->id)
+            ->getJson('/api/v1/contacts?team=all&status=all')
+            ->assertOk()
+            ->assertJsonCount(2, 'data');
     }
 
     public function test_audiences_are_tenant_scoped(): void
@@ -88,8 +93,17 @@ class CrmFoundationTest extends TestCase
             'organization_id' => $organization->id,
             'name' => 'Oferta VIP',
             'team_name' => 'Quality',
+            'category' => 'marketing',
             'status' => 'approved',
             'body' => 'Olá {{nome}}, sua oferta chegou.',
+        ]);
+        MessageTemplate::create([
+            'organization_id' => $organization->id,
+            'name' => 'Confirmação',
+            'team_name' => 'Produto',
+            'category' => 'utility',
+            'status' => 'approved',
+            'body' => 'Seu pedido foi confirmado.',
         ]);
         MessageTemplate::create([
             'organization_id' => $foreign->id,
@@ -99,7 +113,7 @@ class CrmFoundationTest extends TestCase
         ]);
 
         $this->actingAs($user)->withHeader('X-Organization-ID', $organization->id)
-            ->getJson('/api/v1/templates?team=Quality')
+            ->getJson('/api/v1/templates?team=Quality&category=marketing')
             ->assertOk()
             ->assertJsonCount(1, 'data')
             ->assertJsonPath('data.0.name', 'Oferta VIP')
