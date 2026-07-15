@@ -204,6 +204,32 @@ a { color: inherit; text-decoration: none; }
 .foundation-metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 0; }
 .foundation-metrics dt { color: #9690a3; font-size: 12px; font-weight: 900; text-transform: uppercase; }
 .foundation-metrics dd { margin: 5px 0 0; overflow: hidden; color: var(--ink); font-size: 14px; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
+.detail-header > .status { align-self: flex-end; padding: 8px 12px; font-size: 13px; }
+.campaign-detail-grid { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(280px, .65fr); gap: 14px; max-width: 1180px; margin: 0 auto; }
+.detail-hero-panel { min-height: 270px; }
+.detail-hero-panel .panel-head b { color: var(--violet); font-family: var(--font-sora), sans-serif; font-size: 28px; }
+.detail-progress { height: 9px; margin-top: 22px; border-radius: 999px; background: #eeeaf5; overflow: hidden; }
+.detail-progress span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--violet), #9b82ff); }
+.detail-timeline { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 28px; }
+.detail-timeline div { position: relative; display: grid; gap: 7px; border: 1px solid var(--line); border-radius: 10px; background: #faf9fc; padding: 14px; }
+.detail-timeline i { width: 12px; height: 12px; border: 2px solid #d8d3e0; border-radius: 999px; background: white; }
+.detail-timeline .done i { border-color: var(--violet); background: var(--violet); }
+.detail-timeline .current i { border-color: var(--violet); box-shadow: 0 0 0 4px #6c4df61a; }
+.detail-timeline b { font-size: 13px; }
+.detail-timeline span { color: var(--muted); font-size: 12px; font-weight: 700; }
+.detail-side-panel { min-height: 270px; }
+.detail-rate-list { display: grid; gap: 10px; margin: 18px 0 0; }
+.detail-rate-list div { display: flex; justify-content: space-between; gap: 12px; border-top: 1px solid var(--line); padding-top: 12px; }
+.detail-rate-list dt { color: var(--muted); font-size: 13px; font-weight: 800; }
+.detail-rate-list dd { margin: 0; color: var(--ink); font-size: 15px; font-weight: 900; }
+.resource-detail-card { display: grid; align-content: start; gap: 10px; min-height: 230px; }
+.resource-detail-card h2 { margin: 0; font-family: var(--font-sora), sans-serif; font-size: 18px; letter-spacing: -.02em; }
+.resource-detail-card p { margin: 0; color: var(--ink); font-size: 15px; font-weight: 900; line-height: 1.45; }
+.resource-detail-card dl { display: grid; gap: 8px; margin: 0; }
+.resource-detail-card dl div { display: grid; grid-template-columns: minmax(96px, .5fr) 1fr; gap: 8px; border-top: 1px solid var(--line); padding-top: 8px; }
+.resource-detail-card dt { color: #9690a3; font-size: 11px; font-weight: 900; text-transform: uppercase; }
+.resource-detail-card dd { margin: 0; color: var(--ink); font-size: 13px; font-weight: 800; overflow-wrap: anywhere; }
+.resource-detail-card blockquote { margin: 2px 0 0; border-left: 3px solid var(--violet); background: #f7f4ff; padding: 12px; color: #514a61; font-size: 13px; font-weight: 700; line-height: 1.55; }
 
 @media (max-width: 1050px) {
   .sidebar { width: 78px; padding-inline: 12px; }.brand { justify-content: center; padding: 0; }.brand > span:last-child, .nav-label, .nav-item span, .nav-item:not(.active)::after, .upgrade-card, .profile > div:nth-child(2), .profile > svg { display: none; }.nav-item { justify-content: center; padding: 0; }.profile { display: flex; justify-content: center; }.main-content { margin-left: 78px; }.dashboard-grid { grid-template-columns: 1fr; }.operation-panel { min-height: 305px; }
@@ -223,6 +249,8 @@ a { color: inherit; text-decoration: none; }
   .campaign-actions { justify-content: flex-end; }
   .campaign-form-layout { grid-template-columns: 1fr; }
   .choice-grid { grid-template-columns: 1fr; }
+  .campaign-detail-grid { grid-template-columns: 1fr; }
+  .detail-timeline { grid-template-columns: repeat(2, 1fr); }
 }
 
 @media (max-width: 560px) {
@@ -242,6 +270,9 @@ a { color: inherit; text-decoration: none; }
   .wizard-actions { position: static; bottom: auto; flex-direction: column-reverse; margin: 0; padding-bottom: 84px; }
   .wizard-steps { grid-template-columns: 1fr; }
   .campaign-form .primary-button { position: static; width: 100%; height: 44px; border-radius: 10px; font-size: 14px; }
+  .detail-header > .status { align-self: flex-start; }
+  .detail-timeline { grid-template-columns: 1fr; }
+  .resource-detail-card dl div { grid-template-columns: 1fr; }
 }
 
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; } }
