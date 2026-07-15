@@ -30,4 +30,3 @@ HTTP controllers translate transport concerns. Domain actions own behavior. Jobs
 - Forms: React Hook Form and Zod.
 - Local interactions: React state.
 - Backend validation and authorization remain authoritative.
-
