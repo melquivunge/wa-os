@@ -21,14 +21,14 @@ import type { ReactNode } from "react";
 const navItems = [
   { label: "Visão geral", icon: LayoutDashboard, href: "/" },
   { label: "Campanhas", icon: Megaphone, href: "/campaigns" },
-  { label: "Contatos", icon: ContactRound, href: "/" },
-  { label: "Audiências", icon: UsersRound, href: "/" },
-  { label: "Templates", icon: FileText, href: "/" },
+  { label: "Contatos", icon: ContactRound, href: "/contacts" },
+  { label: "Audiências", icon: UsersRound, href: "/audiences" },
+  { label: "Templates", icon: FileText, href: "/templates" },
   { label: "Analytics", icon: BarChart3, href: "/" },
 ];
 
 type AppShellProps = {
-  activePath: "/" | "/campaigns";
+  activePath: "/" | "/campaigns" | "/contacts" | "/audiences" | "/templates";
   children: ReactNode;
 };
 
