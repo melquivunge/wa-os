@@ -21,34 +21,63 @@ import {
   Sparkles,
   UsersRound,
 } from "lucide-react";
+import Link from "next/link";
 import type { CSSProperties } from "react";
+import { requireAuthenticatedUser } from "@/lib/server-auth";
+import { serverApiGet } from "@/lib/server-api";
 
 const navItems = [
-  { label: "Visão geral", icon: LayoutDashboard, active: true },
-  { label: "Campanhas", icon: Megaphone },
-  { label: "Contatos", icon: ContactRound },
-  { label: "Audiências", icon: UsersRound },
-  { label: "Templates", icon: FileText },
-  { label: "Analytics", icon: BarChart3 },
+  { label: "Visão geral", icon: LayoutDashboard, active: true, href: "/" },
+  { label: "Campanhas", icon: Megaphone, href: "/campaigns" },
+  { label: "Contatos", icon: ContactRound, href: "/" },
+  { label: "Audiências", icon: UsersRound, href: "/" },
+  { label: "Templates", icon: FileText, href: "/" },
+  { label: "Analytics", icon: BarChart3, href: "/" },
 ];
 
-const metrics = [
-  { label: "Enviadas", value: 18492, change: "+12,8%", color: "violet", icon: MessageSquareText },
-  { label: "Entregues", value: 17841, change: "96,5%", color: "blue", icon: Check },
-  { label: "Lidas", value: 14626, change: "82,0%", color: "green", icon: Eye },
-  { label: "Falhas", value: 651, change: "3,5%", color: "orange", icon: AlertTriangle },
-];
+type Campaign = {
+  id: string;
+  name: string;
+  audience_name: string;
+  status: string;
+  message_count: number;
+  delivered_count: number;
+  read_count: number;
+  failed_count: number;
+  progress: number;
+  scheduled_at: string | null;
+};
 
-const campaigns = [
-  { name: "Boas-vindas de julho", audience: "Novos clientes", time: "Hoje, 09:30", sent: 4280, read: "86,4%", status: "Concluída" },
-  { name: "Oferta de inverno", audience: "Clientes ativos", time: "Hoje, 14:00", sent: 8142, read: "Em curso", status: "Enviando" },
-  { name: "Reativação 30 dias", audience: "Clientes inativos", time: "Amanhã, 10:15", sent: 2615, read: "—", status: "Agendada" },
-];
+type CampaignSummary = {
+  data: {
+    totals: {
+      campaigns: number;
+      sent: number;
+      delivered: number;
+      read: number;
+      failed: number;
+    };
+    active_campaign: Campaign | null;
+    recent_campaigns: Campaign[];
+  };
+};
 
 const chart = [32, 44, 38, 57, 49, 64, 72, 61, 78, 69, 86, 82, 96, 77];
 
-export default function Home() {
+export default async function Home() {
+  await requireAuthenticatedUser();
+  const summary = await serverApiGet<CampaignSummary>("/api/v1/campaigns/summary");
+
   const numberFormatter = new Intl.NumberFormat("pt-BR");
+  const totals = summary?.data.totals ?? { campaigns: 0, sent: 0, delivered: 0, read: 0, failed: 0 };
+  const activeCampaign = summary?.data.active_campaign;
+  const campaigns = summary?.data.recent_campaigns ?? [];
+  const metrics = [
+    { label: "Enviadas", value: totals.sent, change: "+12,8%", color: "violet", icon: MessageSquareText },
+    { label: "Entregues", value: totals.delivered, change: totals.sent > 0 ? `${Math.round((totals.delivered / totals.sent) * 100)}%` : "0%", color: "blue", icon: Check },
+    { label: "Lidas", value: totals.read, change: totals.delivered > 0 ? `${Math.round((totals.read / totals.delivered) * 100)}%` : "0%", color: "green", icon: Eye },
+    { label: "Falhas", value: totals.failed, change: totals.sent > 0 ? `${Math.round((totals.failed / totals.sent) * 100)}%` : "0%", color: "orange", icon: AlertTriangle },
+  ];
   const formattedDate = new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "2-digit", month: "long" })
     .format(new Date(2026, 6, 14)).toLocaleUpperCase("pt-BR");
 
@@ -64,10 +93,10 @@ export default function Home() {
         <nav className="sidebar-nav" aria-label="Navegação principal">
           <p className="nav-label">Workspace</p>
           {navItems.map((item) => (
-            <button className={item.active ? "nav-item active" : "nav-item"} type="button" key={item.label}>
+            <Link className={item.active ? "nav-item active" : "nav-item"} href={item.href} key={item.label}>
               <item.icon aria-hidden="true" size={18} strokeWidth={1.8} />
               <span>{item.label}</span>
-            </button>
+            </Link>
           ))}
         </nav>
 
@@ -110,7 +139,7 @@ export default function Home() {
               <h1>Bom dia, Marina.</h1>
               <p>Acompanhe a operação das suas campanhas em tempo real.</p>
             </div>
-            <button className="primary-button"><Plus aria-hidden="true" size={18} /> Nova campanha</button>
+            <Link className="primary-button" href="/campaigns/new"><Plus aria-hidden="true" size={18} /> Nova campanha</Link>
           </section>
 
           <section className="metric-grid" aria-label="Métricas do período">
@@ -151,11 +180,11 @@ export default function Home() {
               <div className="panel-head"><div><h2>Operação agora</h2><p>Campanha em andamento</p></div><span className="live-badge"><i /> AO VIVO</span></div>
               <div className="active-campaign">
                 <span className="campaign-icon"><Megaphone aria-hidden="true" size={19} /></span>
-                <div><b>Oferta de inverno</b><span>Clientes ativos · 8.142 contatos</span></div>
-                <button aria-label="Ver campanha Oferta de inverno"><ArrowRight aria-hidden="true" size={18} /></button>
+                <div><b>{activeCampaign?.name ?? "Nenhuma campanha ativa"}</b><span>{activeCampaign?.audience_name ?? "Crie ou agende uma campanha"} · {numberFormatter.format(activeCampaign?.message_count ?? 0)} contatos</span></div>
+                <Link aria-label="Ver campanhas" href="/campaigns"><ArrowRight aria-hidden="true" size={18} /></Link>
               </div>
-              <div className="progress-copy"><span>Progresso do envio</span><b>64%</b></div>
-              <div className="progress"><span /></div>
+              <div className="progress-copy"><span>Progresso do envio</span><b>{activeCampaign?.progress ?? 0}%</b></div>
+              <div className="progress"><span style={{ width: `${activeCampaign?.progress ?? 0}%` }} /></div>
               <div className="journey">
                 <div className="journey-line"><span className="done" /><span className="done" /><span className="current" /><span /></div>
                 <div className="journey-labels">
@@ -170,17 +199,17 @@ export default function Home() {
           </section>
 
           <section className="panel campaigns-panel">
-            <div className="panel-head"><div><h2>Campanhas recentes</h2><p>Desempenho das últimas campanhas</p></div><button className="panel-link" type="button">Ver todas <ArrowRight aria-hidden="true" size={15} /></button></div>
+              <div className="panel-head"><div><h2>Campanhas recentes</h2><p>Desempenho das últimas campanhas</p></div><Link className="panel-link" href="/campaigns">Ver todas <ArrowRight aria-hidden="true" size={15} /></Link></div>
             <table className="campaign-table">
               <caption className="sr-only">Campanhas recentes e seus resultados</caption>
               <thead><tr className="table-row table-header"><th>Campanha</th><th>Envio</th><th>Mensagens</th><th>Leitura</th><th>Status</th><th><span className="sr-only">Ações</span></th></tr></thead>
               <tbody>
               {campaigns.map((campaign, index) => (
                 <tr className="table-row" key={campaign.name}>
-                  <th scope="row" className="campaign-name"><i className={`campaign-dot dot-${index}`}><Megaphone aria-hidden="true" size={15} /></i><span><b>{campaign.name}</b><small>{campaign.audience}</small></span></th>
-                  <td data-label="Envio">{campaign.time}</td>
-                  <td data-label="Mensagens">{numberFormatter.format(campaign.sent)}</td>
-                  <td data-label="Leitura">{campaign.read}</td>
+                  <th scope="row" className="campaign-name"><i className={`campaign-dot dot-${index}`}><Megaphone aria-hidden="true" size={15} /></i><span><b>{campaign.name}</b><small>{campaign.audience_name}</small></span></th>
+                  <td data-label="Envio">{campaign.scheduled_at ? new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }).format(new Date(campaign.scheduled_at)) : "Sem data"}</td>
+                  <td data-label="Mensagens">{numberFormatter.format(campaign.message_count)}</td>
+                  <td data-label="Leitura">{campaign.read_count > 0 ? `${Math.round((campaign.read_count / Math.max(campaign.delivered_count, 1)) * 100)}%` : "—"}</td>
                   <td data-label="Status"><i className={`status status-${index}`}>{campaign.status}</i></td>
                   <td><button aria-label={`Opções de ${campaign.name}`}><MoreHorizontal aria-hidden="true" size={18} /></button></td>
                 </tr>
@@ -192,7 +221,7 @@ export default function Home() {
       </main>
 
       <nav className="bottom-nav" aria-label="Navegação mobile">
-        {navItems.slice(0, 4).map((item) => <button className={item.active ? "active" : ""} type="button" key={item.label}><item.icon aria-hidden="true" size={20} /><span>{item.label}</span></button>)}
+        {navItems.slice(0, 4).map((item) => <Link className={item.active ? "active" : ""} href={item.href} key={item.label}><item.icon aria-hidden="true" size={20} /><span>{item.label}</span></Link>)}
         <button type="button"><Menu aria-hidden="true" size={20} /><span>Mais</span></button>
       </nav>
     </div>
