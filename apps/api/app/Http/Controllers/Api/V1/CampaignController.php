@@ -19,7 +19,7 @@ class CampaignController extends Controller
         $status = $request->query('status');
 
         $campaigns = Campaign::query()
-            ->with('messageTemplate')
+            ->with(['audience', 'messageTemplate'])
             ->whereBelongsTo($context->organization())
             ->when(is_string($status), fn ($query) => $query->where('status', $status))
             ->orderByRaw('scheduled_at IS NULL')
@@ -89,7 +89,7 @@ class CampaignController extends Controller
     {
         abort_unless($campaign->organization_id === $context->organization()->id, 404);
 
-        $campaign->load('messageTemplate');
+        $campaign->load(['audience', 'messageTemplate']);
 
         return response()->json(['data' => $this->serialize($campaign)]);
     }
@@ -97,7 +97,7 @@ class CampaignController extends Controller
     public function summary(TenantContext $context): JsonResponse
     {
         $campaigns = Campaign::query()
-            ->with('messageTemplate')
+            ->with(['audience', 'messageTemplate'])
             ->whereBelongsTo($context->organization())
             ->get();
         $active = $campaigns->firstWhere('status', 'sending') ?? $campaigns->first();
@@ -141,6 +141,23 @@ class CampaignController extends Controller
             'audience_id' => $campaign->audience_id,
             'message_template_id' => $campaign->message_template_id,
             'message_template_name' => $campaign->messageTemplate?->name,
+            'audience' => $campaign->audience ? [
+                'id' => $campaign->audience->id,
+                'name' => $campaign->audience->name,
+                'team_name' => $campaign->audience->team_name,
+                'source' => $campaign->audience->source,
+                'contact_count' => $campaign->audience->contact_count,
+                'estimated_spend_amount' => $campaign->audience->estimated_spend_amount,
+                'rules' => $campaign->audience->rules ?? [],
+            ] : null,
+            'message_template' => $campaign->messageTemplate ? [
+                'id' => $campaign->messageTemplate->id,
+                'name' => $campaign->messageTemplate->name,
+                'team_name' => $campaign->messageTemplate->team_name,
+                'category' => $campaign->messageTemplate->category,
+                'language' => $campaign->messageTemplate->language,
+                'body' => $campaign->messageTemplate->body,
+            ] : null,
             'name' => $campaign->name,
             'audience_name' => $campaign->audience_name,
             'team_name' => $campaign->team_name,
@@ -155,6 +172,12 @@ class CampaignController extends Controller
             'scheduled_at' => $campaign->scheduled_at?->toISOString(),
             'started_at' => $campaign->started_at?->toISOString(),
             'completed_at' => $campaign->completed_at?->toISOString(),
+            'timeline' => [
+                ['label' => 'Criada', 'state' => 'done', 'value' => $campaign->created_at?->toISOString()],
+                ['label' => 'Agendada', 'state' => $campaign->scheduled_at ? 'done' : 'pending', 'value' => $campaign->scheduled_at?->toISOString()],
+                ['label' => 'Enviando', 'state' => $campaign->started_at ? 'done' : ($campaign->status === 'sending' ? 'current' : 'pending'), 'value' => $campaign->started_at?->toISOString()],
+                ['label' => 'Concluída', 'state' => $campaign->completed_at ? 'done' : ($campaign->status === 'completed' ? 'current' : 'pending'), 'value' => $campaign->completed_at?->toISOString()],
+            ],
         ];
     }
 }

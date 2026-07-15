@@ -166,6 +166,71 @@ class CampaignTest extends TestCase
             ->assertJsonPath('data.teams.0.name', 'CRM');
     }
 
+    public function test_show_returns_campaign_detail_with_resources_and_timeline(): void
+    {
+        [$organization, $user] = $this->membership(OrganizationRole::Analyst);
+        $audience = Audience::create([
+            'organization_id' => $organization->id,
+            'name' => 'VIP buyers',
+            'team_name' => 'CRM',
+            'source' => 'Segmento dinâmico',
+            'contact_count' => 750,
+            'estimated_spend_amount' => 22500,
+            'rules' => ['Comprou nos últimos 45 dias'],
+        ]);
+        $template = MessageTemplate::create([
+            'organization_id' => $organization->id,
+            'name' => 'VIP Offer',
+            'team_name' => 'CRM',
+            'category' => 'marketing',
+            'status' => 'approved',
+            'language' => 'pt_BR',
+            'body' => 'Olá {{nome}}, sua oferta chegou.',
+        ]);
+        $campaign = Campaign::create([
+            'organization_id' => $organization->id,
+            'audience_id' => $audience->id,
+            'message_template_id' => $template->id,
+            'name' => 'VIP weekend',
+            'audience_name' => $audience->name,
+            'team_name' => 'CRM',
+            'status' => 'completed',
+            'message_count' => 750,
+            'delivered_count' => 710,
+            'read_count' => 550,
+            'spend_amount' => 22500,
+            'scheduled_at' => now()->subHours(3),
+            'started_at' => now()->subHours(2),
+            'completed_at' => now()->subHour(),
+        ]);
+
+        $this->actingAs($user)->withHeader('X-Organization-ID', $organization->id)
+            ->getJson("/api/v1/campaigns/{$campaign->id}")
+            ->assertOk()
+            ->assertJsonPath('data.name', 'VIP weekend')
+            ->assertJsonPath('data.audience.id', $audience->id)
+            ->assertJsonPath('data.audience.contact_count', 750)
+            ->assertJsonPath('data.message_template.id', $template->id)
+            ->assertJsonPath('data.message_template.category', 'marketing')
+            ->assertJsonPath('data.timeline.0.label', 'Criada')
+            ->assertJsonPath('data.timeline.3.state', 'done');
+    }
+
+    public function test_show_hides_campaign_from_another_organization(): void
+    {
+        [$organization, $user] = $this->membership(OrganizationRole::Analyst);
+        $foreign = Organization::factory()->create();
+        $campaign = Campaign::create([
+            'organization_id' => $foreign->id,
+            'name' => 'Foreign campaign',
+            'audience_name' => 'Hidden audience',
+        ]);
+
+        $this->actingAs($user)->withHeader('X-Organization-ID', $organization->id)
+            ->getJson("/api/v1/campaigns/{$campaign->id}")
+            ->assertNotFound();
+    }
+
     /** @return array{Organization, User} */
     private function membership(OrganizationRole $role, ?Organization $organization = null): array
     {

@@ -92,6 +92,8 @@ export type Campaign = {
   audience_id: string | null;
   message_template_id: string | null;
   message_template_name: string | null;
+  audience: Audience | null;
+  message_template: MessageTemplate | null;
   name: string;
   audience_name: string;
   team_name: string;
@@ -104,6 +106,13 @@ export type Campaign = {
   spend_amount: number;
   progress: number;
   scheduled_at: string | null;
+  started_at: string | null;
+  completed_at: string | null;
+  timeline: Array<{
+    label: string;
+    state: "done" | "current" | "pending";
+    value: string | null;
+  }>;
 };
 
 export type Audience = {
