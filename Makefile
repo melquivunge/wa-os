@@ -30,4 +30,3 @@ lint:
 
 typecheck:
 	npm run typecheck --prefix apps/web
-

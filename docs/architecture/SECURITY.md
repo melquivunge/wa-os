@@ -17,4 +17,3 @@ Phone numbers, contact metadata, message variables, imports, and logs are PII. L
 ## Secrets
 
 Secrets live in environment configuration or the deployment secret store and are never committed, returned by API resources, or written to logs.
-
