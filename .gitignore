@@ -1,0 +1,12 @@
+# Local product instructions and source notes
+prompt.md
+POject PR.md
+
+# Local environment and generated files
+.env
+.DS_Store
+node_modules/
+vendor/
+.next/
+coverage/
+
