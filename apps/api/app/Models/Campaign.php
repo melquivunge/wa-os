@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable([
     'organization_id',
+    'audience_id',
+    'message_template_id',
     'name',
     'audience_name',
     'team_name',
@@ -30,6 +32,16 @@ class Campaign extends Model
     public function organization(): BelongsTo
     {
         return $this->belongsTo(Organization::class);
+    }
+
+    public function audience(): BelongsTo
+    {
+        return $this->belongsTo(Audience::class);
+    }
+
+    public function messageTemplate(): BelongsTo
+    {
+        return $this->belongsTo(MessageTemplate::class);
     }
 
     protected function casts(): array

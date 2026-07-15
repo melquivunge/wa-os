@@ -2,10 +2,21 @@ import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { requireAuthenticatedUser } from "@/lib/server-auth";
+import { serverApiGet } from "@/lib/server-api";
+import type { Audience, MessageTemplate } from "@/lib/api-client";
 import { CampaignForm } from "./campaign-form";
+
+type AudiencesResponse = { data: Audience[] };
+type TemplatesResponse = { data: MessageTemplate[] };
 
 export default async function NewCampaignPage() {
   await requireAuthenticatedUser();
+  const [audiencesResponse, templatesResponse] = await Promise.all([
+    serverApiGet<AudiencesResponse>("/api/v1/audiences"),
+    serverApiGet<TemplatesResponse>("/api/v1/templates?status=approved"),
+  ]);
+  const audiences = audiencesResponse?.data ?? [];
+  const templates = templatesResponse?.data ?? [];
 
   return (
     <AppShell activePath="/campaigns">
@@ -20,7 +31,7 @@ export default async function NewCampaignPage() {
       </header>
 
       <section className="campaign-form-layout">
-        <CampaignForm />
+        <CampaignForm audiences={audiences} templates={templates} />
       </section>
       </div>
     </AppShell>

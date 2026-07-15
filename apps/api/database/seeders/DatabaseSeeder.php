@@ -45,72 +45,6 @@ class DatabaseSeeder extends Seeder
             );
         }
 
-        $demoCampaigns = [
-            [
-                'name' => 'Boas-vindas de julho',
-                'audience_name' => 'Novos clientes',
-                'team_name' => 'Growth',
-                'status' => 'completed',
-                'message_count' => 4280,
-                'delivered_count' => 4164,
-                'read_count' => 3698,
-                'failed_count' => 116,
-                'spend_amount' => 128400,
-                'scheduled_at' => now()->subHours(7),
-                'started_at' => now()->subHours(7)->addMinutes(2),
-                'completed_at' => now()->subHours(6)->addMinutes(12),
-            ],
-            [
-                'name' => 'Oferta de inverno',
-                'audience_name' => 'Clientes ativos',
-                'team_name' => 'CRM',
-                'status' => 'sending',
-                'message_count' => 8142,
-                'delivered_count' => 6480,
-                'read_count' => 4912,
-                'failed_count' => 87,
-                'spend_amount' => 244260,
-                'scheduled_at' => now()->subMinutes(40),
-                'started_at' => now()->subMinutes(35),
-                'completed_at' => null,
-            ],
-            [
-                'name' => 'Reativação 30 dias',
-                'audience_name' => 'Clientes inativos',
-                'team_name' => 'Retenção',
-                'status' => 'scheduled',
-                'message_count' => 2615,
-                'delivered_count' => 0,
-                'read_count' => 0,
-                'failed_count' => 0,
-                'spend_amount' => 78450,
-                'scheduled_at' => now()->addDay()->setTime(10, 15),
-                'started_at' => null,
-                'completed_at' => null,
-            ],
-            [
-                'name' => 'Cupom VIP pós-compra',
-                'audience_name' => 'Compraram nos últimos 14 dias',
-                'team_name' => 'CRM',
-                'status' => 'draft',
-                'message_count' => 1900,
-                'delivered_count' => 0,
-                'read_count' => 0,
-                'failed_count' => 0,
-                'spend_amount' => 57000,
-                'scheduled_at' => null,
-                'started_at' => null,
-                'completed_at' => null,
-            ],
-        ];
-
-        foreach ($demoCampaigns as $campaign) {
-            Campaign::updateOrCreate(
-                ['organization_id' => $organization->id, 'name' => $campaign['name']],
-                ['channel' => 'whatsapp', ...$campaign],
-            );
-        }
-
         $demoContacts = [
             ['name' => 'Ana Rodrigues', 'phone' => '+55 11 94002-1030', 'email' => 'ana@example.test', 'team_name' => 'CRM', 'status' => 'active', 'tags' => ['VIP', 'Pós-compra'], 'last_seen_at' => now()->subMinutes(18)],
             ['name' => 'Bruno Lima', 'phone' => '+55 21 98812-4410', 'email' => 'bruno@example.test', 'team_name' => 'Growth', 'status' => 'active', 'tags' => ['Novo cliente'], 'last_seen_at' => now()->subHours(2)],
@@ -149,6 +83,94 @@ class DatabaseSeeder extends Seeder
             MessageTemplate::updateOrCreate(
                 ['organization_id' => $organization->id, 'name' => $template['name']],
                 $template,
+            );
+        }
+
+        $audiencesByName = Audience::query()
+            ->whereBelongsTo($organization)
+            ->get()
+            ->keyBy('name');
+        $templatesByName = MessageTemplate::query()
+            ->whereBelongsTo($organization)
+            ->get()
+            ->keyBy('name');
+
+        $demoCampaigns = [
+            [
+                'name' => 'Boas-vindas de julho',
+                'audience_name' => 'Novos clientes',
+                'message_template_name' => 'Boas-vindas pós-cadastro',
+                'team_name' => 'Growth',
+                'status' => 'completed',
+                'message_count' => 4280,
+                'delivered_count' => 4164,
+                'read_count' => 3698,
+                'failed_count' => 116,
+                'spend_amount' => 128400,
+                'scheduled_at' => now()->subHours(7),
+                'started_at' => now()->subHours(7)->addMinutes(2),
+                'completed_at' => now()->subHours(6)->addMinutes(12),
+            ],
+            [
+                'name' => 'Oferta de inverno',
+                'audience_name' => 'Clientes ativos',
+                'message_template_name' => 'Oferta relâmpago',
+                'team_name' => 'CRM',
+                'status' => 'sending',
+                'message_count' => 8142,
+                'delivered_count' => 6480,
+                'read_count' => 4912,
+                'failed_count' => 87,
+                'spend_amount' => 244260,
+                'scheduled_at' => now()->subMinutes(40),
+                'started_at' => now()->subMinutes(35),
+                'completed_at' => null,
+            ],
+            [
+                'name' => 'Reativação 30 dias',
+                'audience_name' => 'Clientes inativos',
+                'message_template_name' => 'Reativação 30 dias',
+                'team_name' => 'Retenção',
+                'status' => 'scheduled',
+                'message_count' => 2615,
+                'delivered_count' => 0,
+                'read_count' => 0,
+                'failed_count' => 0,
+                'spend_amount' => 78450,
+                'scheduled_at' => now()->addDay()->setTime(10, 15),
+                'started_at' => null,
+                'completed_at' => null,
+            ],
+            [
+                'name' => 'Cupom VIP pós-compra',
+                'audience_name' => 'Compraram nos últimos 14 dias',
+                'message_template_name' => 'Oferta relâmpago',
+                'team_name' => 'CRM',
+                'status' => 'draft',
+                'message_count' => 1900,
+                'delivered_count' => 0,
+                'read_count' => 0,
+                'failed_count' => 0,
+                'spend_amount' => 57000,
+                'scheduled_at' => null,
+                'started_at' => null,
+                'completed_at' => null,
+            ],
+        ];
+
+        foreach ($demoCampaigns as $campaign) {
+            $audience = $audiencesByName->get($campaign['audience_name']);
+            $template = $templatesByName->get($campaign['message_template_name']);
+            unset($campaign['message_template_name']);
+
+            Campaign::updateOrCreate(
+                ['organization_id' => $organization->id, 'name' => $campaign['name']],
+                [
+                    'channel' => 'whatsapp',
+                    'audience_id' => $audience?->id,
+                    'message_template_id' => $template?->id,
+                    ...$campaign,
+                ],
             );
         }
     }
