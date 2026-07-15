@@ -13,6 +13,7 @@ import {
   TriangleAlert,
 } from "lucide-react";
 import Link from "next/link";
+import { AppShell } from "@/components/app-shell";
 import { requireAuthenticatedUser } from "@/lib/server-auth";
 import { serverApiGet } from "@/lib/server-api";
 
@@ -60,7 +61,8 @@ export default async function CampaignsPage() {
   const scheduled = campaigns.filter((campaign) => campaign.status === "scheduled").length;
 
   return (
-    <main className="campaign-workspace">
+    <AppShell activePath="/campaigns">
+      <div className="campaign-workspace">
       <header className="campaign-header">
         <div>
           <p className="eyebrow">OPERAÇÃO DE CAMPANHAS</p>
@@ -132,6 +134,7 @@ export default async function CampaignsPage() {
           </div>
         ) : null}
       </section>
-    </main>
+      </div>
+    </AppShell>
   );
 }
