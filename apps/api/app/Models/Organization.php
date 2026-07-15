@@ -26,6 +26,21 @@ class Organization extends Model
         return $this->hasMany(Campaign::class);
     }
 
+    public function contacts(): HasMany
+    {
+        return $this->hasMany(Contact::class);
+    }
+
+    public function audiences(): HasMany
+    {
+        return $this->hasMany(Audience::class);
+    }
+
+    public function messageTemplates(): HasMany
+    {
+        return $this->hasMany(MessageTemplate::class);
+    }
+
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'organization_users')
