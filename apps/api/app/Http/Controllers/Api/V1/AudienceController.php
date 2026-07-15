@@ -16,7 +16,7 @@ class AudienceController extends Controller
 
         $audiences = Audience::query()
             ->whereBelongsTo($context->organization())
-            ->when(is_string($team) && $team !== '', fn ($query) => $query->where('team_name', $team))
+            ->when(is_string($team) && $team !== '' && $team !== 'all', fn ($query) => $query->where('team_name', $team))
             ->orderByDesc('contact_count')
             ->orderBy('name')
             ->get()

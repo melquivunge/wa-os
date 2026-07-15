@@ -14,11 +14,13 @@ class MessageTemplateController extends Controller
     {
         $status = $request->query('status');
         $team = $request->query('team');
+        $category = $request->query('category');
 
         $templates = MessageTemplate::query()
             ->whereBelongsTo($context->organization())
-            ->when(is_string($status) && $status !== '', fn ($query) => $query->where('status', $status))
-            ->when(is_string($team) && $team !== '', fn ($query) => $query->where('team_name', $team))
+            ->when(is_string($status) && $status !== '' && $status !== 'all', fn ($query) => $query->where('status', $status))
+            ->when(is_string($team) && $team !== '' && $team !== 'all', fn ($query) => $query->where('team_name', $team))
+            ->when(is_string($category) && $category !== '' && $category !== 'all', fn ($query) => $query->where('category', $category))
             ->orderByRaw("status = 'approved' desc")
             ->orderBy('name')
             ->get()
