@@ -194,7 +194,7 @@ a { color: inherit; text-decoration: none; }
 }
 
 @media (max-width: 900px) {
-  .campaign-stats { grid-template-columns: repeat(2, 1fr); }
+  .campaign-stats { grid-template-columns: 1fr; }
   .campaign-toolbar { align-items: stretch; flex-direction: column; }
   .campaign-row-card { grid-template-columns: auto 1fr; }
   .foundation-list { grid-template-columns: 1fr; }
