@@ -59,11 +59,15 @@ class CampaignTest extends TestCase
             ->postJson('/api/v1/campaigns', [
                 'name' => 'Weekend promo',
                 'audience_name' => 'VIP customers',
+                'team_name' => 'CRM',
                 'status' => 'scheduled',
                 'message_count' => 450,
+                'spend_amount' => 13500,
             ])->assertCreated()
             ->assertJsonPath('data.name', 'Weekend promo')
-            ->assertJsonPath('data.status', 'scheduled');
+            ->assertJsonPath('data.status', 'scheduled')
+            ->assertJsonPath('data.team_name', 'CRM')
+            ->assertJsonPath('data.spend_amount', 13500);
     }
 
     public function test_summary_returns_totals_and_active_campaign(): void
@@ -78,6 +82,8 @@ class CampaignTest extends TestCase
             'delivered_count' => 640,
             'read_count' => 320,
             'failed_count' => 12,
+            'team_name' => 'CRM',
+            'spend_amount' => 30000,
         ]);
         Campaign::create([
             'organization_id' => $organization->id,
@@ -88,6 +94,8 @@ class CampaignTest extends TestCase
             'delivered_count' => 490,
             'read_count' => 410,
             'failed_count' => 10,
+            'team_name' => 'Growth',
+            'spend_amount' => 18000,
         ]);
 
         $this->actingAs($user)->withHeader('X-Organization-ID', $organization->id)
@@ -95,8 +103,10 @@ class CampaignTest extends TestCase
             ->assertOk()
             ->assertJsonPath('data.totals.sent', 1500)
             ->assertJsonPath('data.totals.delivered', 1130)
+            ->assertJsonPath('data.totals.spend', 48000)
             ->assertJsonPath('data.active_campaign.name', 'Running')
-            ->assertJsonPath('data.active_campaign.progress', 64);
+            ->assertJsonPath('data.active_campaign.progress', 64)
+            ->assertJsonPath('data.teams.0.name', 'CRM');
     }
 
     /** @return array{Organization, User} */
