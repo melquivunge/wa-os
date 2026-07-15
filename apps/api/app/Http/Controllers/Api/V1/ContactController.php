@@ -17,8 +17,8 @@ class ContactController extends Controller
 
         $contacts = Contact::query()
             ->whereBelongsTo($context->organization())
-            ->when(is_string($status) && $status !== '', fn ($query) => $query->where('status', $status))
-            ->when(is_string($team) && $team !== '', fn ($query) => $query->where('team_name', $team))
+            ->when(is_string($status) && $status !== '' && $status !== 'all', fn ($query) => $query->where('status', $status))
+            ->when(is_string($team) && $team !== '' && $team !== 'all', fn ($query) => $query->where('team_name', $team))
             ->orderByDesc('last_seen_at')
             ->orderBy('name')
             ->get()
