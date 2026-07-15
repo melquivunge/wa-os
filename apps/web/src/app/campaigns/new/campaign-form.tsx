@@ -10,7 +10,9 @@ import { ApiError, campaignApi } from "@/lib/api-client";
 type FormState = {
   name: string;
   audienceName: string;
+  teamName: string;
   messageCount: string;
+  spendAmount: string;
   date: string;
   time: string;
 };
@@ -18,10 +20,14 @@ type FormState = {
 const initialState: FormState = {
   name: "",
   audienceName: "",
+  teamName: "CRM",
   messageCount: "1000",
+  spendAmount: "30000",
   date: "",
   time: "",
 };
+
+const teamOptions = ["CRM", "Growth", "Retenção", "Produto"];
 
 function firstError(errors: Record<string, string[]>, field: string) {
   return errors[field]?.[0] ?? null;
@@ -58,7 +64,9 @@ export function CampaignForm() {
       await campaignApi.create({
         name: form.name,
         audience_name: form.audienceName,
+        team_name: form.teamName,
         message_count: audienceEstimate,
+        spend_amount: Number.parseInt(form.spendAmount, 10) || 0,
         scheduled_at: scheduledAt,
         status,
       });
@@ -69,6 +77,8 @@ export function CampaignForm() {
           ...error.errors,
           audienceName: error.errors.audience_name ?? [],
           messageCount: error.errors.message_count ?? [],
+          spendAmount: error.errors.spend_amount ?? [],
+          teamName: error.errors.team_name ?? [],
         });
         setMessage(error.message);
       } else {
@@ -114,6 +124,34 @@ export function CampaignForm() {
           {firstError(errors, "audienceName") ? <small>{firstError(errors, "audienceName")}</small> : null}
         </label>
 
+        <div className="form-grid">
+          <label>
+            <span>Time responsável</span>
+            <select
+              aria-invalid={Boolean(firstError(errors, "teamName"))}
+              name="teamName"
+              onChange={(event) => updateField("teamName", event.target.value)}
+              value={form.teamName}
+            >
+              {teamOptions.map((team) => <option key={team} value={team}>{team}</option>)}
+            </select>
+            {firstError(errors, "teamName") ? <small>{firstError(errors, "teamName")}</small> : null}
+          </label>
+
+          <label>
+            <span>Gasto estimado</span>
+            <input
+              aria-invalid={Boolean(firstError(errors, "spendAmount"))}
+              min="0"
+              name="spendAmount"
+              onChange={(event) => updateField("spendAmount", event.target.value)}
+              type="number"
+              value={form.spendAmount}
+            />
+            {firstError(errors, "spendAmount") ? <small>{firstError(errors, "spendAmount")}</small> : null}
+          </label>
+        </div>
+
         <label>
           <span>Quantidade estimada</span>
           <input
@@ -153,6 +191,8 @@ export function CampaignForm() {
 
       <aside className="campaign-preview" aria-label="Prévia da campanha">
         <div><CheckCircle2 aria-hidden="true" size={19} /><span>Status inicial</span><b>{status === "scheduled" ? "Agendada" : "Rascunho"}</b></div>
+        <div><CheckCircle2 aria-hidden="true" size={19} /><span>Time</span><b>{form.teamName}</b></div>
+        <div><CheckCircle2 aria-hidden="true" size={19} /><span>Gasto estimado</span><b>{new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number.parseInt(form.spendAmount, 10) || 0)}</b></div>
         <div><CheckCircle2 aria-hidden="true" size={19} /><span>Audiência estimada</span><b>{new Intl.NumberFormat("pt-BR").format(audienceEstimate)} contatos</b></div>
         <div><CheckCircle2 aria-hidden="true" size={19} /><span>Canal</span><b>WhatsApp</b></div>
       </aside>

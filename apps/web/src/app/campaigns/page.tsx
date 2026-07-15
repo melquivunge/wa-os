@@ -3,7 +3,7 @@ import {
   Megaphone,
   MessageSquareText,
   Plus,
-  Send,
+  ReceiptText,
 } from "lucide-react";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
@@ -19,8 +19,9 @@ export default async function CampaignsPage() {
   const response = await serverApiGet<CampaignsResponse>("/api/v1/campaigns");
   const campaigns = response?.data ?? [];
   const numberFormatter = new Intl.NumberFormat("pt-BR");
+  const currencyFormatter = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
   const totalMessages = campaigns.reduce((total, campaign) => total + campaign.message_count, 0);
-  const sending = campaigns.filter((campaign) => campaign.status === "sending").length;
+  const totalSpend = campaigns.reduce((total, campaign) => total + campaign.spend_amount, 0);
   const scheduled = campaigns.filter((campaign) => campaign.status === "scheduled").length;
 
   return (
@@ -38,7 +39,7 @@ export default async function CampaignsPage() {
       <section className="campaign-stats" aria-label="Resumo de campanhas">
         <article><Megaphone aria-hidden="true" size={20} /><span>Total</span><b>{campaigns.length}</b></article>
         <article><MessageSquareText aria-hidden="true" size={20} /><span>Mensagens</span><b>{numberFormatter.format(totalMessages)}</b></article>
-        <article><Send aria-hidden="true" size={20} /><span>Em envio</span><b>{sending}</b></article>
+        <article><ReceiptText aria-hidden="true" size={20} /><span>Gasto</span><b>{currencyFormatter.format(totalSpend)}</b></article>
         <article><CalendarClock aria-hidden="true" size={20} /><span>Agendadas</span><b>{scheduled}</b></article>
       </section>
 
