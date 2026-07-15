@@ -19,11 +19,13 @@ export type Campaign = {
   id: string;
   name: string;
   audience_name: string;
+  team_name: string;
   status: "draft" | "scheduled" | "sending" | "completed" | "paused" | "failed";
   message_count: number;
   delivered_count: number;
   read_count: number;
   failed_count: number;
+  spend_amount: number;
   progress: number;
   scheduled_at: string | null;
 };
@@ -69,14 +71,20 @@ function matchesFilter(campaign: Campaign, filter: FilterKey) {
 export function CampaignListClient({ campaigns }: CampaignListClientProps) {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<FilterKey>("all");
+  const [teamFilter, setTeamFilter] = useState("all");
   const numberFormatter = new Intl.NumberFormat("pt-BR");
+  const currencyFormatter = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+  const teams = Array.from(new Set(campaigns.map((campaign) => campaign.team_name)))
+    .sort((first, second) => first.localeCompare(second, "pt-BR"));
 
   const normalizedQuery = query.trim().toLocaleLowerCase("pt-BR");
   const visibleCampaigns = campaigns.filter((campaign) => {
-    const searchable = `${campaign.name} ${campaign.audience_name} ${statusLabels[campaign.status]}`
+    const searchable = `${campaign.name} ${campaign.audience_name} ${campaign.team_name} ${statusLabels[campaign.status]}`
       .toLocaleLowerCase("pt-BR");
 
-    return matchesFilter(campaign, filter) && (!normalizedQuery || searchable.includes(normalizedQuery));
+    return matchesFilter(campaign, filter)
+      && (teamFilter === "all" || campaign.team_name === teamFilter)
+      && (!normalizedQuery || searchable.includes(normalizedQuery));
   });
 
   return (
@@ -109,6 +117,13 @@ export function CampaignListClient({ campaigns }: CampaignListClientProps) {
             </button>
           ))}
         </div>
+        <label className="team-filter">
+          <span>Time</span>
+          <select aria-label="Filtrar por time" onChange={(event) => setTeamFilter(event.target.value)} value={teamFilter}>
+            <option value="all">Todos</option>
+            {teams.map((team) => <option key={team} value={team}>{team}</option>)}
+          </select>
+        </label>
       </section>
 
       <section className="campaign-list" aria-label="Lista de campanhas">
@@ -123,7 +138,7 @@ export function CampaignListClient({ campaigns }: CampaignListClientProps) {
               <div className="campaign-row-main">
                 <div>
                   <h2>{campaign.name}</h2>
-                  <p>{campaign.audience_name}</p>
+                  <p>{campaign.audience_name} · {campaign.team_name}</p>
                 </div>
                 <span className={`status status-${campaign.status}`}>{statusLabels[campaign.status]}</span>
               </div>
@@ -135,7 +150,7 @@ export function CampaignListClient({ campaigns }: CampaignListClientProps) {
                 <div><dt>Mensagens</dt><dd>{numberFormatter.format(campaign.message_count)}</dd></div>
                 <div><dt>Entregues</dt><dd>{numberFormatter.format(campaign.delivered_count)}</dd></div>
                 <div><dt>Lidas</dt><dd>{numberFormatter.format(campaign.read_count)}</dd></div>
-                <div><dt>Falhas</dt><dd>{numberFormatter.format(campaign.failed_count)}</dd></div>
+                <div><dt>Gasto</dt><dd>{currencyFormatter.format(campaign.spend_amount)}</dd></div>
               </dl>
               <div className="campaign-actions">
                 <button aria-label={`Ver campanha ${campaign.name}`} type="button"><ArrowRight aria-hidden="true" size={18} /></button>
