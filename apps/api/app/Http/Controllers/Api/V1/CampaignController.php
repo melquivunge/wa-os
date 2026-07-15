@@ -3,11 +3,14 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Models\Audience;
 use App\Models\Campaign;
+use App\Models\MessageTemplate;
 use App\Tenancy\TenantContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class CampaignController extends Controller
 {
@@ -16,6 +19,7 @@ class CampaignController extends Controller
         $status = $request->query('status');
 
         $campaigns = Campaign::query()
+            ->with('messageTemplate')
             ->whereBelongsTo($context->organization())
             ->when(is_string($status), fn ($query) => $query->where('status', $status))
             ->orderByRaw('scheduled_at IS NULL')
@@ -31,23 +35,51 @@ class CampaignController extends Controller
     {
         abort_unless($context->membership()->role->canWriteMarketingData(), 403);
 
+        $organizationId = $context->organization()->id;
+
         $data = $request->validate([
             'name' => ['required', 'string', 'max:140'],
-            'audience_name' => ['required', 'string', 'max:120'],
-            'team_name' => ['sometimes', 'required', 'string', 'max:120'],
+            'audience_id' => [
+                'required',
+                'uuid',
+                Rule::exists('audiences', 'id')->where(fn ($query) => $query->where('organization_id', $organizationId)),
+            ],
+            'message_template_id' => [
+                'required',
+                'uuid',
+                Rule::exists('message_templates', 'id')->where(fn ($query) => $query
+                    ->where('organization_id', $organizationId)
+                    ->where('status', 'approved')),
+            ],
             'channel' => ['sometimes', 'string', Rule::in(['whatsapp'])],
             'status' => ['sometimes', 'string', Rule::in(['draft', 'scheduled'])],
-            'message_count' => ['sometimes', 'integer', 'min:0', 'max:1000000'],
-            'spend_amount' => ['sometimes', 'integer', 'min:0', 'max:100000000'],
             'scheduled_at' => ['nullable', 'date'],
         ]);
 
+        $audience = Audience::query()
+            ->whereBelongsTo($context->organization())
+            ->findOrFail($data['audience_id']);
+        $template = MessageTemplate::query()
+            ->whereBelongsTo($context->organization())
+            ->where('status', 'approved')
+            ->findOrFail($data['message_template_id']);
+        if ($template->team_name !== $audience->team_name) {
+            throw ValidationException::withMessages([
+                'message_template_id' => ['O template precisa pertencer ao mesmo time da audiência.'],
+            ]);
+        }
+
         $campaign = Campaign::create([
             ...$data,
-            'organization_id' => $context->organization()->id,
+            'organization_id' => $organizationId,
+            'audience_id' => $audience->id,
+            'message_template_id' => $template->id,
+            'audience_name' => $audience->name,
             'channel' => $data['channel'] ?? 'whatsapp',
             'status' => $data['status'] ?? 'draft',
-            'team_name' => $data['team_name'] ?? 'Marketing',
+            'team_name' => $audience->team_name,
+            'message_count' => $audience->contact_count,
+            'spend_amount' => $audience->estimated_spend_amount,
         ]);
 
         return response()->json(['data' => $this->serialize($campaign)], 201);
@@ -57,12 +89,17 @@ class CampaignController extends Controller
     {
         abort_unless($campaign->organization_id === $context->organization()->id, 404);
 
+        $campaign->load('messageTemplate');
+
         return response()->json(['data' => $this->serialize($campaign)]);
     }
 
     public function summary(TenantContext $context): JsonResponse
     {
-        $campaigns = Campaign::query()->whereBelongsTo($context->organization())->get();
+        $campaigns = Campaign::query()
+            ->with('messageTemplate')
+            ->whereBelongsTo($context->organization())
+            ->get();
         $active = $campaigns->firstWhere('status', 'sending') ?? $campaigns->first();
 
         return response()->json([
@@ -101,6 +138,9 @@ class CampaignController extends Controller
 
         return [
             'id' => $campaign->id,
+            'audience_id' => $campaign->audience_id,
+            'message_template_id' => $campaign->message_template_id,
+            'message_template_name' => $campaign->messageTemplate?->name,
             'name' => $campaign->name,
             'audience_name' => $campaign->audience_name,
             'team_name' => $campaign->team_name,
