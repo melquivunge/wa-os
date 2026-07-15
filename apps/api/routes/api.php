@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\CampaignController;
 use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\OrganizationController;
@@ -29,6 +30,10 @@ Route::prefix('v1')->group(function (): void {
             Route::post('/organizations/{organization}/members', [OrganizationMemberController::class, 'store'])->name('api.v1.organizations.members.store');
             Route::patch('/organizations/{organization}/members/{member}', [OrganizationMemberController::class, 'update'])->name('api.v1.organizations.members.update');
             Route::delete('/organizations/{organization}/members/{member}', [OrganizationMemberController::class, 'destroy'])->name('api.v1.organizations.members.destroy');
+            Route::get('/campaigns/summary', [CampaignController::class, 'summary'])->name('api.v1.campaigns.summary');
+            Route::get('/campaigns', [CampaignController::class, 'index'])->name('api.v1.campaigns.index');
+            Route::post('/campaigns', [CampaignController::class, 'store'])->name('api.v1.campaigns.store');
+            Route::get('/campaigns/{campaign}', [CampaignController::class, 'show'])->name('api.v1.campaigns.show');
         });
     });
 });
