@@ -58,7 +58,7 @@ a { color: inherit; text-decoration: none; }
 
 .page { max-width: 1450px; margin: auto; padding: 32px 34px 50px; }
 .page-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 27px; }
-.eyebrow { margin: 0 0 8px !important; color: #9a94a7 !important; font-family: var(--font-mono), monospace; font-size: 9px !important; font-weight: 700; letter-spacing: .11em; }
+.eyebrow { margin: 0 0 8px !important; color: #9a94a7 !important; font-family: var(--font-mono), monospace; font-size: 12px !important; font-weight: 700; letter-spacing: .11em; }
 .page-heading h1 { margin: 0; font-family: var(--font-sora), sans-serif; font-size: clamp(26px, 3vw, 34px); letter-spacing: -.045em; }
 .page-heading p { margin: 8px 0 0; color: var(--muted); font-size: 12px; }
 .primary-button { display: flex; height: 42px; align-items: center; gap: 8px; border: 0; border-radius: 10px; background: var(--violet); padding: 0 17px; color: white; font-size: 11px; font-weight: 800; box-shadow: 0 9px 20px #6c4df638; cursor: pointer; transition: .2s ease; }
@@ -143,4 +143,6 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
   .bottom-nav button { display: flex; min-width: 44px; min-height: 44px; flex-direction: column; align-items: center; justify-content: center; gap: 4px; border: 0; background: transparent; color: #9a95a5; font-size: 12px; font-weight: 700; cursor: pointer; }
   .bottom-nav button.active { color: var(--violet); }
   .campaign-table { width: 100%; }
+  .page-heading { flex-direction: column; }
+  .primary-button { position: static; width: auto; height: 44px; justify-content: center; border-radius: 10px; padding-inline: 16px; font-size: 14px; }
 }
