@@ -76,6 +76,28 @@ export type LoginInput = {
   remember: boolean;
 };
 
+export type CreateCampaignInput = {
+  name: string;
+  audience_name: string;
+  message_count: number;
+  scheduled_at: string | null;
+  status: "draft" | "scheduled";
+};
+
+export type Campaign = {
+  id: string;
+  name: string;
+  audience_name: string;
+  channel: string;
+  status: string;
+  message_count: number;
+  delivered_count: number;
+  read_count: number;
+  failed_count: number;
+  progress: number;
+  scheduled_at: string | null;
+};
+
 export const authApi = {
   async login(input: LoginInput) {
     await prepareCookieSession();
@@ -90,6 +112,16 @@ export const authApi = {
     return request<{ message: string }>("/api/v1/auth/forgot-password", {
       method: "POST",
       body: JSON.stringify({ email }),
+    });
+  },
+};
+
+export const campaignApi = {
+  async create(input: CreateCampaignInput) {
+    await prepareCookieSession();
+    return request<{ data: Campaign }>("/api/v1/campaigns", {
+      method: "POST",
+      body: JSON.stringify(input),
     });
   },
 };
