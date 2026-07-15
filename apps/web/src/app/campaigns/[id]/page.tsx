@@ -107,7 +107,7 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
         </section>
 
         <section className="campaign-detail-grid">
-          <article className="panel detail-hero-panel">
+          <article className="campaign-detail-card detail-hero-panel">
             <div className="panel-head">
               <div><h2>Progresso operacional</h2><p>Etapas principais derivadas da campanha</p></div>
               <b>{campaign.progress}%</b>
@@ -124,18 +124,32 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
             </div>
           </article>
 
-          <article className="panel detail-side-panel">
+          <article className="campaign-detail-card detail-side-panel">
             <div className="panel-head"><div><h2>Saúde do envio</h2><p>Taxas calculadas sobre os totais atuais</p></div></div>
             <dl className="detail-rate-list">
-              <div><dt>Entregues</dt><dd>{numberFormatter.format(campaign.delivered_count)} · {deliveryRate}%</dd></div>
-              <div><dt>Lidas</dt><dd>{numberFormatter.format(campaign.read_count)} · {readRate}%</dd></div>
-              <div><dt>Falhas</dt><dd>{numberFormatter.format(campaign.failed_count)} · {failureRate}%</dd></div>
+              <div>
+                <dt>Entregues</dt>
+                <dd><span>{numberFormatter.format(campaign.delivered_count)}</span><b>{deliveryRate}%</b></dd>
+                <i><span style={{ width: `${deliveryRate}%` }} /></i>
+              </div>
+              <div>
+                <dt>Lidas</dt>
+                <dd><span>{numberFormatter.format(campaign.read_count)}</span><b>{readRate}%</b></dd>
+                <i><span style={{ width: `${readRate}%` }} /></i>
+              </div>
+              <div>
+                <dt>Falhas</dt>
+                <dd><span>{numberFormatter.format(campaign.failed_count)}</span><b>{failureRate}%</b></dd>
+                <i className="danger"><span style={{ width: `${failureRate}%` }} /></i>
+              </div>
             </dl>
           </article>
 
-          <article className="panel resource-detail-card">
-            <span className="resource-icon"><UsersRound aria-hidden="true" size={18} /></span>
-            <h2>Audiência</h2>
+          <article className="campaign-detail-card resource-detail-card">
+            <div className="resource-detail-title">
+              <span className="resource-icon"><UsersRound aria-hidden="true" size={18} /></span>
+              <h2>Audiência</h2>
+            </div>
             <p>{campaign.audience?.name ?? campaign.audience_name}</p>
             <dl>
               <div><dt>Origem</dt><dd>{campaign.audience?.source ?? "Manual"}</dd></div>
@@ -144,9 +158,11 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
             </dl>
           </article>
 
-          <article className="panel resource-detail-card template">
-            <span className="resource-icon"><FileText aria-hidden="true" size={18} /></span>
-            <h2>Template</h2>
+          <article className="campaign-detail-card resource-detail-card template">
+            <div className="resource-detail-title">
+              <span className="resource-icon"><FileText aria-hidden="true" size={18} /></span>
+              <h2>Template</h2>
+            </div>
             <p>{campaign.message_template?.name ?? "Template não informado"}</p>
             <dl>
               <div><dt>Categoria</dt><dd>{campaign.message_template?.category ?? "—"}</dd></div>
@@ -155,9 +171,11 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
             <blockquote>{campaign.message_template?.body ?? "Campanha criada antes da seleção de template."}</blockquote>
           </article>
 
-          <article className="panel resource-detail-card">
-            <span className="resource-icon"><CalendarClock aria-hidden="true" size={18} /></span>
-            <h2>Agenda</h2>
+          <article className="campaign-detail-card resource-detail-card">
+            <div className="resource-detail-title">
+              <span className="resource-icon"><CalendarClock aria-hidden="true" size={18} /></span>
+              <h2>Agenda</h2>
+            </div>
             <p>{formatDate(campaign.scheduled_at)}</p>
             <dl>
               <div><dt>Início</dt><dd>{formatDate(campaign.started_at)}</dd></div>
@@ -165,9 +183,11 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
             </dl>
           </article>
 
-          <article className="panel resource-detail-card">
-            <span className="resource-icon"><Megaphone aria-hidden="true" size={18} /></span>
-            <h2>Operação</h2>
+          <article className="campaign-detail-card resource-detail-card">
+            <div className="resource-detail-title">
+              <span className="resource-icon"><Megaphone aria-hidden="true" size={18} /></span>
+              <h2>Operação</h2>
+            </div>
             <p>{campaign.team_name}</p>
             <dl>
               <div><dt>Status</dt><dd>{statusLabels[campaign.status]}</dd></div>
