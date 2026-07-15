@@ -37,6 +37,9 @@ Route::prefix('v1')->group(function (): void {
             Route::get('/campaigns', [CampaignController::class, 'index'])->name('api.v1.campaigns.index');
             Route::post('/campaigns', [CampaignController::class, 'store'])->name('api.v1.campaigns.store');
             Route::get('/campaigns/{campaign}', [CampaignController::class, 'show'])->name('api.v1.campaigns.show');
+            Route::post('/campaigns/{campaign}/pause', [CampaignController::class, 'pause'])->name('api.v1.campaigns.pause');
+            Route::post('/campaigns/{campaign}/resume', [CampaignController::class, 'resume'])->name('api.v1.campaigns.resume');
+            Route::post('/campaigns/{campaign}/cancel', [CampaignController::class, 'cancel'])->name('api.v1.campaigns.cancel');
             Route::get('/contacts', [ContactController::class, 'index'])->name('api.v1.contacts.index');
             Route::get('/audiences', [AudienceController::class, 'index'])->name('api.v1.audiences.index');
             Route::get('/templates', [MessageTemplateController::class, 'index'])->name('api.v1.templates.index');
