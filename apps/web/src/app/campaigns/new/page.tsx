@@ -1,12 +1,14 @@
 import { ArrowLeft, CalendarClock, MessageSquareText, Send, UsersRound } from "lucide-react";
 import Link from "next/link";
+import { AppShell } from "@/components/app-shell";
 import { requireAuthenticatedUser } from "@/lib/server-auth";
 
 export default async function NewCampaignPage() {
   await requireAuthenticatedUser();
 
   return (
-    <main className="campaign-workspace">
+    <AppShell activePath="/campaigns">
+      <div className="campaign-workspace">
       <header className="campaign-header">
         <div>
           <Link className="back-link" href="/campaigns"><ArrowLeft aria-hidden="true" size={17} /> Campanhas</Link>
@@ -52,6 +54,7 @@ export default async function NewCampaignPage() {
           <div><CalendarClock aria-hidden="true" size={19} /><span>Status inicial</span><b>Rascunho</b></div>
         </aside>
       </section>
-    </main>
+      </div>
+    </AppShell>
   );
 }
