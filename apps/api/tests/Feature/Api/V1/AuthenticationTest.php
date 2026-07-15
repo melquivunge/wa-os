@@ -20,6 +20,18 @@ class AuthenticationTest extends TestCase
         $this->withHeader('Origin', 'http://localhost:3000');
     }
 
+    public function test_spa_preflight_allows_required_csrf_headers(): void
+    {
+        $this->withHeaders([
+            'Access-Control-Request-Method' => 'POST',
+            'Access-Control-Request-Headers' => 'content-type,x-requested-with,x-xsrf-token',
+        ])->options('/api/v1/auth/login')
+            ->assertNoContent()
+            ->assertHeader('Access-Control-Allow-Origin', 'http://localhost:3000')
+            ->assertHeader('Access-Control-Allow-Credentials', 'true')
+            ->assertHeader('Access-Control-Allow-Headers', 'accept, content-type, origin, x-csrf-token, x-xsrf-token, x-organization-id, x-requested-with');
+    }
+
     public function test_user_can_login_with_normalized_email_and_logout(): void
     {
         $user = User::factory()->create(['email' => 'owner@example.com', 'password' => Hash::make('Secret123!')]);
