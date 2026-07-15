@@ -12,6 +12,7 @@ import {
   Send,
   TriangleAlert,
   X,
+  XCircle,
 } from "lucide-react";
 import { useState } from "react";
 import Link from "next/link";
@@ -21,7 +22,7 @@ export type Campaign = {
   name: string;
   audience_name: string;
   team_name: string;
-  status: "draft" | "scheduled" | "sending" | "completed" | "paused" | "failed";
+  status: "draft" | "scheduled" | "sending" | "completed" | "paused" | "failed" | "canceled";
   message_count: number;
   delivered_count: number;
   read_count: number;
@@ -44,6 +45,7 @@ const statusLabels: Record<Campaign["status"], string> = {
   completed: "Concluída",
   paused: "Pausada",
   failed: "Falhou",
+  canceled: "Cancelada",
 };
 
 const statusIcons = {
@@ -53,6 +55,7 @@ const statusIcons = {
   completed: Check,
   paused: PauseCircle,
   failed: TriangleAlert,
+  canceled: XCircle,
 };
 
 const filters: Array<{ key: FilterKey; label: string }> = [

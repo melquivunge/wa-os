@@ -39,13 +39,23 @@ type Campaign = {
   id: string;
   name: string;
   audience_name: string;
-  status: string;
+  status: "draft" | "scheduled" | "sending" | "completed" | "paused" | "failed" | "canceled";
   message_count: number;
   delivered_count: number;
   read_count: number;
   failed_count: number;
   progress: number;
   scheduled_at: string | null;
+};
+
+const campaignStatusLabels: Record<Campaign["status"], string> = {
+  draft: "Rascunho",
+  scheduled: "Agendada",
+  sending: "Enviando",
+  completed: "Concluída",
+  paused: "Pausada",
+  failed: "Falhou",
+  canceled: "Cancelada",
 };
 
 type CampaignSummary = {
@@ -210,7 +220,7 @@ export default async function Home() {
                   <td data-label="Envio">{campaign.scheduled_at ? new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }).format(new Date(campaign.scheduled_at)) : "Sem data"}</td>
                   <td data-label="Mensagens">{numberFormatter.format(campaign.message_count)}</td>
                   <td data-label="Leitura">{campaign.read_count > 0 ? `${Math.round((campaign.read_count / Math.max(campaign.delivered_count, 1)) * 100)}%` : "—"}</td>
-                  <td data-label="Status"><i className={`status status-${index}`}>{campaign.status}</i></td>
+                  <td data-label="Status"><i className={`status status-${campaign.status}`}>{campaignStatusLabels[campaign.status]}</i></td>
                   <td><button aria-label={`Opções de ${campaign.name}`}><MoreHorizontal aria-hidden="true" size={18} /></button></td>
                 </tr>
               ))}
