@@ -1,9 +1,12 @@
 <?php
 
+use App\Http\Controllers\Api\V1\AudienceController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\CampaignController;
+use App\Http\Controllers\Api\V1\ContactController;
 use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\MeController;
+use App\Http\Controllers\Api\V1\MessageTemplateController;
 use App\Http\Controllers\Api\V1\OrganizationController;
 use App\Http\Controllers\Api\V1\OrganizationMemberController;
 use App\Http\Controllers\Api\V1\PasswordResetController;
@@ -34,6 +37,9 @@ Route::prefix('v1')->group(function (): void {
             Route::get('/campaigns', [CampaignController::class, 'index'])->name('api.v1.campaigns.index');
             Route::post('/campaigns', [CampaignController::class, 'store'])->name('api.v1.campaigns.store');
             Route::get('/campaigns/{campaign}', [CampaignController::class, 'show'])->name('api.v1.campaigns.show');
+            Route::get('/contacts', [ContactController::class, 'index'])->name('api.v1.contacts.index');
+            Route::get('/audiences', [AudienceController::class, 'index'])->name('api.v1.audiences.index');
+            Route::get('/templates', [MessageTemplateController::class, 'index'])->name('api.v1.templates.index');
         });
     });
 });

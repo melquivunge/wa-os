@@ -3,7 +3,10 @@
 namespace Database\Seeders;
 
 use App\Enums\OrganizationRole;
+use App\Models\Audience;
 use App\Models\Campaign;
+use App\Models\Contact;
+use App\Models\MessageTemplate;
 use App\Models\Organization;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -105,6 +108,47 @@ class DatabaseSeeder extends Seeder
             Campaign::updateOrCreate(
                 ['organization_id' => $organization->id, 'name' => $campaign['name']],
                 ['channel' => 'whatsapp', ...$campaign],
+            );
+        }
+
+        $demoContacts = [
+            ['name' => 'Ana Rodrigues', 'phone' => '+55 11 94002-1030', 'email' => 'ana@example.test', 'team_name' => 'CRM', 'status' => 'active', 'tags' => ['VIP', 'Pós-compra'], 'last_seen_at' => now()->subMinutes(18)],
+            ['name' => 'Bruno Lima', 'phone' => '+55 21 98812-4410', 'email' => 'bruno@example.test', 'team_name' => 'Growth', 'status' => 'active', 'tags' => ['Novo cliente'], 'last_seen_at' => now()->subHours(2)],
+            ['name' => 'Carla Mendes', 'phone' => '+55 31 97770-8712', 'email' => 'carla@example.test', 'team_name' => 'Retenção', 'status' => 'inactive', 'tags' => ['30 dias sem compra'], 'last_seen_at' => now()->subDays(11)],
+            ['name' => 'Diego Santos', 'phone' => '+55 41 99654-2201', 'email' => 'diego@example.test', 'team_name' => 'Produto', 'status' => 'active', 'tags' => ['Beta'], 'last_seen_at' => now()->subDay()],
+        ];
+
+        foreach ($demoContacts as $contact) {
+            Contact::updateOrCreate(
+                ['organization_id' => $organization->id, 'phone' => $contact['phone']],
+                $contact,
+            );
+        }
+
+        $demoAudiences = [
+            ['name' => 'Clientes ativos', 'team_name' => 'CRM', 'source' => 'Segmento dinâmico', 'contact_count' => 8142, 'estimated_spend_amount' => 244260, 'rules' => ['Comprou nos últimos 45 dias'], 'refreshed_at' => now()->subMinutes(12)],
+            ['name' => 'Novos clientes', 'team_name' => 'Growth', 'source' => 'Importação CSV', 'contact_count' => 4280, 'estimated_spend_amount' => 128400, 'rules' => ['Primeira compra em julho'], 'refreshed_at' => now()->subHours(4)],
+            ['name' => 'Clientes inativos', 'team_name' => 'Retenção', 'source' => 'Segmento dinâmico', 'contact_count' => 2615, 'estimated_spend_amount' => 78450, 'rules' => ['Sem compra há 30 dias'], 'refreshed_at' => now()->subHours(1)],
+            ['name' => 'Compraram nos últimos 14 dias', 'team_name' => 'CRM', 'source' => 'Segmento dinâmico', 'contact_count' => 1900, 'estimated_spend_amount' => 57000, 'rules' => ['Pedido entregue', 'Sem cupom ativo'], 'refreshed_at' => now()->subMinutes(47)],
+        ];
+
+        foreach ($demoAudiences as $audience) {
+            Audience::updateOrCreate(
+                ['organization_id' => $organization->id, 'name' => $audience['name']],
+                $audience,
+            );
+        }
+
+        $demoTemplates = [
+            ['name' => 'Oferta relâmpago', 'team_name' => 'CRM', 'category' => 'marketing', 'status' => 'approved', 'language' => 'pt_BR', 'body' => 'Olá {{nome}}, sua oferta de inverno está pronta. Use o cupom {{cupom}} até hoje.', 'last_used_at' => now()->subMinutes(35)],
+            ['name' => 'Boas-vindas pós-cadastro', 'team_name' => 'Growth', 'category' => 'onboarding', 'status' => 'approved', 'language' => 'pt_BR', 'body' => 'Bem-vindo ao Acme Studio, {{nome}}. Veja seus próximos passos aqui: {{link}}', 'last_used_at' => now()->subHours(7)],
+            ['name' => 'Reativação 30 dias', 'team_name' => 'Retenção', 'category' => 'retention', 'status' => 'draft', 'language' => 'pt_BR', 'body' => '{{nome}}, sentimos sua falta. Preparamos uma condição especial para voltar.', 'last_used_at' => null],
+        ];
+
+        foreach ($demoTemplates as $template) {
+            MessageTemplate::updateOrCreate(
+                ['organization_id' => $organization->id, 'name' => $template['name']],
+                $template,
             );
         }
     }
