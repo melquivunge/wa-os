@@ -14,4 +14,3 @@ Use a monorepo containing a Next.js web application and Laravel modular-monolith
 ## Consequences
 
 Domain boundaries must be enforced by project structure and review rather than network boundaries. The web and API may deploy independently while sharing one release workflow.
-
