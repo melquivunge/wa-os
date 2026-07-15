@@ -130,6 +130,7 @@ a { color: inherit; text-decoration: none; }
 .campaign-status-icon.completed { background: #e8f8f0; color: #23865f; }
 .campaign-status-icon.scheduled { background: #fff1e4; color: #d87538; }
 .campaign-status-icon.failed { background: #fff0e7; color: #d96f34; }
+.campaign-status-icon.canceled { background: #f3f1f7; color: #686173; }
 .campaign-row-main { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .campaign-row-main h2 { margin: 0; font-family: var(--font-sora), sans-serif; font-size: 16px; letter-spacing: 0; }
 .campaign-row-main p { margin: 5px 0 0; color: var(--muted); font-size: 13px; }
@@ -149,6 +150,7 @@ a { color: inherit; text-decoration: none; }
 .status-completed { background: #e8f8f0; color: #23865f; }
 .status-paused { background: #eaf2ff; color: #407cc1; }
 .status-failed { background: #fff0e7; color: #d96f34; }
+.status-canceled { background: #f3f1f7; color: #686173; }
 .empty-state { border: 1px dashed #d9d3e5; border-radius: 8px; background: white; padding: 42px; text-align: center; color: var(--muted); }
 .empty-state svg { color: var(--violet); }
 .empty-state h2 { margin: 12px 0 4px; color: var(--ink); font-family: var(--font-sora), sans-serif; }
@@ -204,7 +206,16 @@ a { color: inherit; text-decoration: none; }
 .foundation-metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 0; }
 .foundation-metrics dt { color: #9690a3; font-size: 12px; font-weight: 900; text-transform: uppercase; }
 .foundation-metrics dd { margin: 5px 0 0; overflow: hidden; color: var(--ink); font-size: 14px; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
-.detail-header > .status { align-self: flex-end; padding: 8px 12px; font-size: 13px; }
+.detail-header-actions { display: grid; justify-items: end; gap: 10px; align-self: flex-end; }
+.detail-header-actions > .status { padding: 8px 12px; font-size: 13px; }
+.detail-actions { display: grid; justify-items: end; gap: 8px; }
+.detail-actions > div { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+.detail-actions button { display: inline-flex; min-height: 40px; align-items: center; gap: 7px; border: 1px solid #ddd7ec; border-radius: 10px; background: white; padding: 0 12px; color: var(--violet); font-size: 13px; font-weight: 900; cursor: pointer; box-shadow: 0 8px 18px #3926500a; }
+.detail-actions button:hover:not(:disabled) { border-color: #cfc3ff; background: #f7f4ff; }
+.detail-actions button.danger { color: #b84b35; }
+.detail-actions button.danger:hover:not(:disabled) { border-color: #ffd4c4; background: #fff6f0; }
+.detail-actions button:disabled { opacity: .62; cursor: wait; }
+.detail-actions p { max-width: 320px; margin: 0; border: 1px solid #ffd4c4; border-radius: 9px; background: #fff6f0; padding: 9px 10px; color: #9a442d; font-size: 12px; font-weight: 800; text-align: right; }
 .campaign-detail-grid { display: grid; grid-template-columns: minmax(0, 1.42fr) minmax(320px, .78fr); gap: 18px; max-width: 1180px; margin: 0 auto; }
 .campaign-detail-grid > .campaign-detail-card { position: relative; border: 1px solid #e1daf0; border-radius: 18px; background: linear-gradient(180deg, #ffffff 0%, #ffffff 68%, #faf8ff 100%); padding: 24px; box-shadow: 0 18px 42px #39265012; overflow: hidden; }
 .campaign-detail-grid > .campaign-detail-card::before { position: absolute; inset: 0 0 auto; height: 4px; background: linear-gradient(90deg, #6c4df6, #9b82ff, #e8e2ff); content: ""; opacity: .82; }
@@ -281,7 +292,10 @@ a { color: inherit; text-decoration: none; }
   .wizard-actions { position: static; bottom: auto; flex-direction: column-reverse; margin: 0; padding-bottom: 84px; }
   .wizard-steps { grid-template-columns: 1fr; }
   .campaign-form .primary-button { position: static; width: 100%; height: 44px; border-radius: 10px; font-size: 14px; }
-  .detail-header > .status { align-self: flex-start; }
+  .detail-header-actions { justify-items: start; align-self: flex-start; }
+  .detail-actions { justify-items: start; }
+  .detail-actions > div { justify-content: flex-start; }
+  .detail-actions p { text-align: left; }
   .detail-timeline { grid-template-columns: 1fr; }
   .resource-detail-card dl div { grid-template-columns: 1fr; }
 }

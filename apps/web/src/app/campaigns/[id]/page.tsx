@@ -14,13 +14,14 @@ import { notFound } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { requireAuthenticatedUser } from "@/lib/server-auth";
 import { serverApiGet } from "@/lib/server-api";
+import { CampaignActionsClient } from "./campaign-actions-client";
 
 type CampaignDetail = {
   id: string;
   name: string;
   audience_name: string;
   team_name: string;
-  status: "draft" | "scheduled" | "sending" | "completed" | "paused" | "failed";
+  status: "draft" | "scheduled" | "sending" | "completed" | "paused" | "failed" | "canceled";
   message_count: number;
   delivered_count: number;
   read_count: number;
@@ -59,6 +60,7 @@ const statusLabels: Record<CampaignDetail["status"], string> = {
   completed: "Concluída",
   paused: "Pausada",
   failed: "Falhou",
+  canceled: "Cancelada",
 };
 
 function formatDate(value: string | null) {
@@ -96,7 +98,10 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
             <h1>{campaign.name}</h1>
             <p>{campaign.audience_name} · {campaign.team_name} · {statusLabels[campaign.status]}</p>
           </div>
-          <span className={`status status-${campaign.status}`}>{statusLabels[campaign.status]}</span>
+          <div className="detail-header-actions">
+            <span className={`status status-${campaign.status}`}>{statusLabels[campaign.status]}</span>
+            <CampaignActionsClient campaignId={campaign.id} status={campaign.status} />
+          </div>
         </header>
 
         <section className="campaign-stats" aria-label="Resumo da campanha">

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Audience;
 use App\Models\Campaign;
 use App\Models\MessageTemplate;
+use App\Services\CampaignTransitionService;
 use App\Tenancy\TenantContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -94,6 +95,27 @@ class CampaignController extends Controller
         return response()->json(['data' => $this->serialize($campaign)]);
     }
 
+    public function pause(Campaign $campaign, TenantContext $context, CampaignTransitionService $transitions): JsonResponse
+    {
+        $this->authorizeCampaignOperation($campaign, $context);
+
+        return response()->json(['data' => $this->serialize($transitions->pause($campaign)->load(['audience', 'messageTemplate']))]);
+    }
+
+    public function resume(Campaign $campaign, TenantContext $context, CampaignTransitionService $transitions): JsonResponse
+    {
+        $this->authorizeCampaignOperation($campaign, $context);
+
+        return response()->json(['data' => $this->serialize($transitions->resume($campaign)->load(['audience', 'messageTemplate']))]);
+    }
+
+    public function cancel(Campaign $campaign, TenantContext $context, CampaignTransitionService $transitions): JsonResponse
+    {
+        $this->authorizeCampaignOperation($campaign, $context);
+
+        return response()->json(['data' => $this->serialize($transitions->cancel($campaign)->load(['audience', 'messageTemplate']))]);
+    }
+
     public function summary(TenantContext $context): JsonResponse
     {
         $campaigns = Campaign::query()
@@ -179,5 +201,11 @@ class CampaignController extends Controller
                 ['label' => 'Concluída', 'state' => $campaign->completed_at ? 'done' : ($campaign->status === 'completed' ? 'current' : 'pending'), 'value' => $campaign->completed_at?->toISOString()],
             ],
         ];
+    }
+
+    private function authorizeCampaignOperation(Campaign $campaign, TenantContext $context): void
+    {
+        abort_unless($campaign->organization_id === $context->organization()->id, 404);
+        abort_unless($context->membership()->role->canWriteMarketingData(), 403);
     }
 }
