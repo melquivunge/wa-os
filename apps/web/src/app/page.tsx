@@ -64,16 +64,16 @@ export default function Home() {
         <nav className="sidebar-nav" aria-label="Navegação principal">
           <p className="nav-label">Workspace</p>
           {navItems.map((item) => (
-            <a className={item.active ? "nav-item active" : "nav-item"} href="#" key={item.label}>
+            <button className={item.active ? "nav-item active" : "nav-item"} type="button" key={item.label}>
               <item.icon aria-hidden="true" size={18} strokeWidth={1.8} />
               <span>{item.label}</span>
-            </a>
+            </button>
           ))}
         </nav>
 
         <div className="sidebar-bottom">
-          <a className="nav-item" href="#"><Settings aria-hidden="true" size={18} /> Configurações</a>
-          <a className="nav-item" href="#"><CircleHelp aria-hidden="true" size={18} /> Ajuda e suporte</a>
+          <button className="nav-item" type="button"><Settings aria-hidden="true" size={18} /> Configurações</button>
+          <button className="nav-item" type="button"><CircleHelp aria-hidden="true" size={18} /> Ajuda e suporte</button>
           <div className="upgrade-card">
             <span className="upgrade-icon"><Sparkles aria-hidden="true" size={17} /></span>
             <b>Expanda seus envios</b>
@@ -95,7 +95,7 @@ export default function Home() {
           <div className="topbar-actions">
             <label className="search-box">
               <Search aria-hidden="true" size={16} />
-              <input aria-label="Buscar" placeholder="Buscar campanhas, contatos…" />
+              <input aria-label="Buscar" name="dashboard-search" autoComplete="off" placeholder="Buscar campanhas, contatos…" />
               <kbd>⌘ K</kbd>
             </label>
             <button className="icon-button" aria-label="Notificações"><Bell aria-hidden="true" size={18} /><i /></button>
@@ -106,7 +106,7 @@ export default function Home() {
         <div className="page">
           <section className="page-heading">
             <div>
-              <p className="eyebrow">{formattedDate}</p>
+              <p className="eyebrow">DADOS DEMONSTRATIVOS · {formattedDate}</p>
               <h1>Bom dia, Marina.</h1>
               <p>Acompanhe a operação das suas campanhas em tempo real.</p>
             </div>
@@ -170,7 +170,7 @@ export default function Home() {
           </section>
 
           <section className="panel campaigns-panel">
-            <div className="panel-head"><div><h2>Campanhas recentes</h2><p>Desempenho das últimas campanhas</p></div><a href="#">Ver todas <ArrowRight aria-hidden="true" size={15} /></a></div>
+            <div className="panel-head"><div><h2>Campanhas recentes</h2><p>Desempenho das últimas campanhas</p></div><button className="panel-link" type="button">Ver todas <ArrowRight aria-hidden="true" size={15} /></button></div>
             <table className="campaign-table">
               <caption className="sr-only">Campanhas recentes e seus resultados</caption>
               <thead><tr className="table-row table-header"><th>Campanha</th><th>Envio</th><th>Mensagens</th><th>Leitura</th><th>Status</th><th><span className="sr-only">Ações</span></th></tr></thead>
@@ -192,8 +192,8 @@ export default function Home() {
       </main>
 
       <nav className="bottom-nav" aria-label="Navegação mobile">
-        {navItems.slice(0, 4).map((item) => <a className={item.active ? "active" : ""} href="#" key={item.label}><item.icon aria-hidden="true" size={20} /><span>{item.label}</span></a>)}
-        <a href="#"><Menu aria-hidden="true" size={20} /><span>Mais</span></a>
+        {navItems.slice(0, 4).map((item) => <button className={item.active ? "active" : ""} type="button" key={item.label}><item.icon aria-hidden="true" size={20} /><span>{item.label}</span></button>)}
+        <button type="button"><Menu aria-hidden="true" size={20} /><span>Mais</span></button>
       </nav>
     </div>
   );

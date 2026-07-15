@@ -21,7 +21,7 @@ button { color: inherit; }
 a { color: inherit; text-decoration: none; }
 .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 .skip-link { position: fixed; top: 10px; left: 10px; z-index: 100; transform: translateY(-150%); border-radius: 8px; background: var(--ink); padding: 12px 16px; color: white; font-size: 14px; font-weight: 700; transition: transform .15s ease; }
-.skip-link:focus { transform: translateY(0); }
+.skip-link:focus-visible { transform: translateY(0); }
 
 .app-shell { min-height: 100vh; }
 .sidebar { position: fixed; inset: 0 auto 0 0; z-index: 30; display: flex; width: 238px; flex-direction: column; border-right: 1px solid var(--line); background: #fbfaff; padding: 24px 17px 18px; }
@@ -30,7 +30,7 @@ a { color: inherit; text-decoration: none; }
 .brand-mark { display: grid; width: 34px; height: 34px; place-items: center; border-radius: 11px; background: var(--violet); color: white; box-shadow: 0 8px 18px #6c4df63d; }
 .sidebar-nav { margin-top: 38px; }
 .nav-label { margin: 0 12px 10px; color: #aaa5b5; font-size: 10px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
-.nav-item { display: flex; min-height: 43px; align-items: center; gap: 12px; margin: 3px 0; border-radius: 10px; padding: 0 12px; color: #6e697b; font-size: 13px; font-weight: 600; transition: .18s ease; }
+.nav-item { display: flex; width: 100%; min-height: 43px; align-items: center; gap: 12px; margin: 3px 0; border: 0; border-radius: 10px; background: transparent; padding: 0 12px; color: #6e697b; font-size: 13px; font-weight: 600; text-align: left; cursor: pointer; transition: .18s ease; }
 .nav-item:hover { background: #f1edff; color: var(--violet); }
 .nav-item.active { background: #eee9ff; color: var(--violet); box-shadow: inset 3px 0 var(--violet); }
 .sidebar-bottom { margin-top: auto; }
@@ -47,7 +47,7 @@ a { color: inherit; text-decoration: none; }
 .main-content { min-height: 100vh; margin-left: 238px; }
 .topbar { position: sticky; top: 0; z-index: 20; display: flex; height: 70px; align-items: center; justify-content: flex-end; border-bottom: 1px solid var(--line); background: #ffffffdb; padding: 0 34px; backdrop-filter: blur(14px); }
 .topbar-actions { display: flex; align-items: center; gap: 12px; }
-.search-box { display: flex; width: 270px; height: 38px; align-items: center; gap: 8px; border: 1px solid var(--line); border-radius: 9px; background: #faf9fc; padding: 0 10px; color: #aaa6b4; }
+.search-box { display: flex; width: 270px; height: 44px; align-items: center; gap: 8px; border: 1px solid var(--line); border-radius: 9px; background: #faf9fc; padding: 0 10px; color: #aaa6b4; }
 .search-box input { min-width: 0; flex: 1; border: 0; outline: 0; background: transparent; color: var(--ink); font-size: 11px; }
 .search-box kbd { border: 1px solid #dedbe5; border-radius: 5px; background: white; padding: 2px 5px; font-size: 9px; }
 .icon-button { position: relative; display: grid; width: 38px; height: 38px; place-items: center; border: 1px solid var(--line); border-radius: 9px; background: white; cursor: pointer; }
@@ -102,7 +102,7 @@ a { color: inherit; text-decoration: none; }
 .journey-labels { display: grid; grid-template-columns: repeat(4, 1fr); margin-top: 12px; text-align: center; }.journey-labels span { display: flex; flex-direction: column; align-items: center; }.journey-labels i { display: none; }.journey-labels b { font-size: 7px; }.journey-labels small { margin-top: 3px; color: #aaa6b2; font-size: 7px; }
 .operation-note { display: flex; align-items: center; gap: 7px; margin-top: 17px; border-radius: 8px; background: #f7f5fb; padding: 9px; color: #928d9d; font-size: 8px; }.operation-note b { margin-left: auto; color: var(--ink); }
 
-.campaigns-panel { margin-top: 14px; padding-bottom: 8px; }.campaigns-panel .panel-head { padding-bottom: 13px; }.panel-head a { display: flex; align-items: center; gap: 5px; color: var(--violet); font-size: 9px; font-weight: 800; }
+.campaigns-panel { margin-top: 14px; padding-bottom: 8px; }.campaigns-panel .panel-head { padding-bottom: 13px; }.panel-link { display: flex; min-height: 44px; align-items: center; gap: 5px; border: 0; background: transparent; color: var(--violet); font-size: 12px; font-weight: 800; cursor: pointer; }
 .campaign-table { margin: 0 -20px; }.table-row { display: grid; grid-template-columns: 2fr 1.1fr .8fr .8fr .9fr 30px; align-items: center; min-height: 57px; border-top: 1px solid #efedf4; padding: 0 20px; color: #686473; font-size: 9px; }.table-header { min-height: 31px; background: #faf9fc; color: #aaa6b2; font-family: var(--font-mono), monospace; font-size: 7px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }.campaign-name { display: flex; align-items: center; gap: 9px; }.campaign-name i { display: grid; width: 29px; height: 29px; flex: 0 0 auto; place-items: center; border-radius: 8px; }.dot-0 { background: #e9f7f0; color: #28956d; }.dot-1 { background: #eee9ff; color: var(--violet); }.dot-2 { background: #fff2e5; color: #df7a3e; }.campaign-name b, .campaign-name small { display: block; }.campaign-name b { color: var(--ink); font-size: 9px; }.campaign-name small { margin-top: 3px; color: #9995a3; font-size: 7px; }.status { display: inline-flex; border-radius: 20px; padding: 4px 7px; font-size: 7px; font-style: normal; font-weight: 800; }.status-0 { background: #e8f8f0; color: #23865f; }.status-1 { background: #eee9ff; color: var(--violet); }.status-2 { background: #fff1e4; color: #d87538; }.table-row button { border: 0; background: transparent; color: #9994a3; cursor: pointer; }
 .bottom-nav { display: none; }
 
@@ -121,7 +121,7 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
 .nav-label, .eyebrow, .metric-label, .metric-change, .metric-card small,
 .panel-head p, .chart-legend, .axis-labels, .chart-days, .live-badge,
 .active-campaign div span, .progress-copy, .journey-labels b,
-.journey-labels small, .operation-note, .panel-head a, .table-header,
+.journey-labels small, .operation-note, .panel-link, .table-header,
 .campaign-name small, .status { font-size: 12px; }
 .nav-item, .upgrade-card p, .upgrade-card button, .profile b, .profile span,
 .search-box input, .account-switcher, .page-heading p, .primary-button,
@@ -129,7 +129,8 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
 .panel-head h2 { font-size: 16px; }
 .upgrade-card b { font-size: 14px; }
 .nav-item, .icon-button, .account-switcher, .primary-button, .select-button,
-.active-campaign button, .table-row button { min-width: 44px; min-height: 44px; }
+.upgrade-card button, .panel-link, .active-campaign button, .table-row button { min-width: 44px; min-height: 44px; }
+.search-box input { height: 100%; }
 .select-button { padding-inline: 12px; font-size: 12px; }
 .active-campaign button, .table-row button { display: inline-grid; place-items: center; }
 .campaign-table { width: calc(100% + 40px); border-collapse: collapse; }
@@ -139,6 +140,7 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
 @media (max-width: 720px) {
   .table-row > td:not(:last-child)::before { display: block; margin-bottom: 4px; color: #888292; content: attr(data-label); font-size: 12px; font-weight: 700; text-transform: uppercase; }
   .table-row > td:last-child { position: absolute; top: 7px; right: 5px; }
-  .bottom-nav a { min-height: 44px; font-size: 12px; }
+  .bottom-nav button { display: flex; min-width: 44px; min-height: 44px; flex-direction: column; align-items: center; justify-content: center; gap: 4px; border: 0; background: transparent; color: #9a95a5; font-size: 12px; font-weight: 700; cursor: pointer; }
+  .bottom-nav button.active { color: var(--violet); }
   .campaign-table { width: 100%; }
 }
