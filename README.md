@@ -46,3 +46,5 @@ make lint
 make typecheck
 ```
 
+GitHub Actions runs the same backend, frontend, and infrastructure checks on
+feature pushes and pull requests targeting `dev`, `stage`, or `main`.
