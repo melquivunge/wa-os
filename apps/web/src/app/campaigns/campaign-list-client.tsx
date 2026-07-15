@@ -14,6 +14,7 @@ import {
   X,
 } from "lucide-react";
 import { useState } from "react";
+import Link from "next/link";
 
 export type Campaign = {
   id: string;
@@ -153,7 +154,7 @@ export function CampaignListClient({ campaigns }: CampaignListClientProps) {
                 <div><dt>Gasto</dt><dd>{currencyFormatter.format(campaign.spend_amount)}</dd></div>
               </dl>
               <div className="campaign-actions">
-                <button aria-label={`Ver campanha ${campaign.name}`} type="button"><ArrowRight aria-hidden="true" size={18} /></button>
+                <Link aria-label={`Ver campanha ${campaign.name}`} href={`/campaigns/${campaign.id}`}><ArrowRight aria-hidden="true" size={18} /></Link>
                 <button aria-label={`Mais opções para ${campaign.name}`} type="button"><MoreHorizontal aria-hidden="true" size={18} /></button>
               </div>
             </article>
