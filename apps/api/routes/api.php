@@ -1,8 +1,34 @@
 <?php
 
+use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\HealthController;
+use App\Http\Controllers\Api\V1\MeController;
+use App\Http\Controllers\Api\V1\OrganizationController;
+use App\Http\Controllers\Api\V1\OrganizationMemberController;
+use App\Http\Controllers\Api\V1\PasswordResetController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function (): void {
     Route::get('/health', HealthController::class)->name('api.v1.health');
+    Route::middleware('throttle:6,1')->group(function (): void {
+        Route::post('/auth/login', [AuthController::class, 'login'])->name('api.v1.auth.login');
+        Route::post('/auth/forgot-password', [PasswordResetController::class, 'request'])->name('api.v1.auth.password.request');
+        Route::post('/auth/reset-password', [PasswordResetController::class, 'reset'])->name('api.v1.auth.password.reset');
+    });
+
+    Route::middleware('auth:sanctum')->group(function (): void {
+        Route::post('/auth/logout', [AuthController::class, 'logout'])->name('api.v1.auth.logout');
+        Route::get('/organizations', [OrganizationController::class, 'index'])->name('api.v1.organizations.index');
+        Route::post('/organizations', [OrganizationController::class, 'store'])->name('api.v1.organizations.store');
+
+        Route::middleware('tenant')->group(function (): void {
+            Route::get('/me', MeController::class)->name('api.v1.me');
+            Route::get('/organizations/{organization}', [OrganizationController::class, 'show'])->name('api.v1.organizations.show');
+            Route::patch('/organizations/{organization}', [OrganizationController::class, 'update'])->name('api.v1.organizations.update');
+            Route::get('/organizations/{organization}/members', [OrganizationMemberController::class, 'index'])->name('api.v1.organizations.members.index');
+            Route::post('/organizations/{organization}/members', [OrganizationMemberController::class, 'store'])->name('api.v1.organizations.members.store');
+            Route::patch('/organizations/{organization}/members/{member}', [OrganizationMemberController::class, 'update'])->name('api.v1.organizations.members.update');
+            Route::delete('/organizations/{organization}/members/{member}', [OrganizationMemberController::class, 'destroy'])->name('api.v1.organizations.members.destroy');
+        });
+    });
 });
