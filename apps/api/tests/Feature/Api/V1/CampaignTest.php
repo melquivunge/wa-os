@@ -3,7 +3,9 @@
 namespace Tests\Feature\Api\V1;
 
 use App\Enums\OrganizationRole;
+use App\Models\Audience;
 use App\Models\Campaign;
+use App\Models\MessageTemplate;
 use App\Models\Organization;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -48,26 +50,81 @@ class CampaignTest extends TestCase
     {
         [$organization, $marketing] = $this->membership(OrganizationRole::Marketing);
         [, $analyst] = $this->membership(OrganizationRole::Analyst, $organization);
+        [$audience, $template] = $this->campaignResources($organization);
 
         $this->actingAs($analyst)->withHeader('X-Organization-ID', $organization->id)
             ->postJson('/api/v1/campaigns', [
                 'name' => 'Read only attempt',
-                'audience_name' => 'Customers',
+                'audience_id' => $audience->id,
+                'message_template_id' => $template->id,
             ])->assertForbidden();
 
         $this->actingAs($marketing)->withHeader('X-Organization-ID', $organization->id)
             ->postJson('/api/v1/campaigns', [
                 'name' => 'Weekend promo',
-                'audience_name' => 'VIP customers',
-                'team_name' => 'CRM',
+                'audience_id' => $audience->id,
+                'message_template_id' => $template->id,
                 'status' => 'scheduled',
-                'message_count' => 450,
-                'spend_amount' => 13500,
             ])->assertCreated()
             ->assertJsonPath('data.name', 'Weekend promo')
+            ->assertJsonPath('data.audience_name', 'VIP customers')
+            ->assertJsonPath('data.audience_id', $audience->id)
+            ->assertJsonPath('data.message_template_id', $template->id)
+            ->assertJsonPath('data.message_template_name', 'Weekend offer')
             ->assertJsonPath('data.status', 'scheduled')
             ->assertJsonPath('data.team_name', 'CRM')
+            ->assertJsonPath('data.message_count', 450)
             ->assertJsonPath('data.spend_amount', 13500);
+    }
+
+    public function test_campaign_creation_rejects_resources_from_another_organization_and_unapproved_templates(): void
+    {
+        [$organization, $marketing] = $this->membership(OrganizationRole::Marketing);
+        $foreign = Organization::factory()->create();
+        [$audience] = $this->campaignResources($organization);
+        $foreignAudience = Audience::create([
+            'organization_id' => $foreign->id,
+            'name' => 'Foreign audience',
+            'team_name' => 'CRM',
+        ]);
+        $draftTemplate = MessageTemplate::create([
+            'organization_id' => $organization->id,
+            'name' => 'Draft template',
+            'team_name' => 'CRM',
+            'status' => 'draft',
+            'body' => 'Draft',
+        ]);
+        $growthTemplate = MessageTemplate::create([
+            'organization_id' => $organization->id,
+            'name' => 'Growth template',
+            'team_name' => 'Growth',
+            'status' => 'approved',
+            'body' => 'Growth',
+        ]);
+
+        $this->actingAs($marketing)->withHeader('X-Organization-ID', $organization->id)
+            ->postJson('/api/v1/campaigns', [
+                'name' => 'Foreign resource attempt',
+                'audience_id' => $foreignAudience->id,
+                'message_template_id' => $draftTemplate->id,
+            ])->assertUnprocessable()
+            ->assertJsonValidationErrors(['audience_id', 'message_template_id']);
+
+        $this->actingAs($marketing)->withHeader('X-Organization-ID', $organization->id)
+            ->postJson('/api/v1/campaigns', [
+                'name' => 'Draft template attempt',
+                'audience_id' => $audience->id,
+                'message_template_id' => $draftTemplate->id,
+            ])->assertUnprocessable()
+            ->assertJsonValidationErrors(['message_template_id']);
+
+        $this->actingAs($marketing)->withHeader('X-Organization-ID', $organization->id)
+            ->postJson('/api/v1/campaigns', [
+                'name' => 'Wrong team template attempt',
+                'audience_id' => $audience->id,
+                'message_template_id' => $growthTemplate->id,
+            ])->assertUnprocessable()
+            ->assertJsonValidationErrors(['message_template_id']);
     }
 
     public function test_summary_returns_totals_and_active_campaign(): void
@@ -117,5 +174,27 @@ class CampaignTest extends TestCase
         $organization->memberships()->create(['user_id' => $user->id, 'role' => $role]);
 
         return [$organization, $user];
+    }
+
+    /** @return array{Audience, MessageTemplate} */
+    private function campaignResources(Organization $organization): array
+    {
+        $audience = Audience::create([
+            'organization_id' => $organization->id,
+            'name' => 'VIP customers',
+            'team_name' => 'CRM',
+            'contact_count' => 450,
+            'estimated_spend_amount' => 13500,
+        ]);
+        $template = MessageTemplate::create([
+            'organization_id' => $organization->id,
+            'name' => 'Weekend offer',
+            'team_name' => 'CRM',
+            'category' => 'marketing',
+            'status' => 'approved',
+            'body' => 'Olá {{nome}}, sua oferta chegou.',
+        ]);
+
+        return [$audience, $template];
     }
 }

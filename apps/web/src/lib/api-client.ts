@@ -78,16 +78,20 @@ export type LoginInput = {
 
 export type CreateCampaignInput = {
   name: string;
-  audience_name: string;
-  team_name: string;
-  message_count: number;
-  spend_amount: number;
+  audience_id: string;
+  message_template_id: string;
+  team_name?: string;
+  message_count?: number;
+  spend_amount?: number;
   scheduled_at: string | null;
   status: "draft" | "scheduled";
 };
 
 export type Campaign = {
   id: string;
+  audience_id: string | null;
+  message_template_id: string | null;
+  message_template_name: string | null;
   name: string;
   audience_name: string;
   team_name: string;
@@ -100,6 +104,28 @@ export type Campaign = {
   spend_amount: number;
   progress: number;
   scheduled_at: string | null;
+};
+
+export type Audience = {
+  id: string;
+  name: string;
+  team_name: string;
+  source: string;
+  contact_count: number;
+  estimated_spend_amount: number;
+  rules: string[];
+  refreshed_at: string | null;
+};
+
+export type MessageTemplate = {
+  id: string;
+  name: string;
+  team_name: string;
+  category: string;
+  status: string;
+  language: string;
+  body: string;
+  last_used_at: string | null;
 };
 
 export const authApi = {
