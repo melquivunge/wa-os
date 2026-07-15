@@ -34,9 +34,11 @@ class CampaignController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:140'],
             'audience_name' => ['required', 'string', 'max:120'],
+            'team_name' => ['sometimes', 'required', 'string', 'max:120'],
             'channel' => ['sometimes', 'string', Rule::in(['whatsapp'])],
             'status' => ['sometimes', 'string', Rule::in(['draft', 'scheduled'])],
             'message_count' => ['sometimes', 'integer', 'min:0', 'max:1000000'],
+            'spend_amount' => ['sometimes', 'integer', 'min:0', 'max:100000000'],
             'scheduled_at' => ['nullable', 'date'],
         ]);
 
@@ -45,6 +47,7 @@ class CampaignController extends Controller
             'organization_id' => $context->organization()->id,
             'channel' => $data['channel'] ?? 'whatsapp',
             'status' => $data['status'] ?? 'draft',
+            'team_name' => $data['team_name'] ?? 'Marketing',
         ]);
 
         return response()->json(['data' => $this->serialize($campaign)], 201);
@@ -70,7 +73,16 @@ class CampaignController extends Controller
                     'delivered' => $campaigns->sum('delivered_count'),
                     'read' => $campaigns->sum('read_count'),
                     'failed' => $campaigns->sum('failed_count'),
+                    'spend' => $campaigns->sum('spend_amount'),
                 ],
+                'teams' => $campaigns
+                    ->groupBy('team_name')
+                    ->map(fn ($teamCampaigns, string $teamName): array => [
+                        'name' => $teamName,
+                        'campaigns' => $teamCampaigns->count(),
+                        'spend' => $teamCampaigns->sum('spend_amount'),
+                    ])
+                    ->values(),
                 'active_campaign' => $active ? $this->serialize($active) : null,
                 'recent_campaigns' => $campaigns
                     ->sortByDesc(fn (Campaign $campaign) => $campaign->scheduled_at?->getTimestamp() ?? $campaign->created_at->getTimestamp())
@@ -91,12 +103,14 @@ class CampaignController extends Controller
             'id' => $campaign->id,
             'name' => $campaign->name,
             'audience_name' => $campaign->audience_name,
+            'team_name' => $campaign->team_name,
             'channel' => $campaign->channel,
             'status' => $campaign->status,
             'message_count' => $campaign->message_count,
             'delivered_count' => $campaign->delivered_count,
             'read_count' => $campaign->read_count,
             'failed_count' => $campaign->failed_count,
+            'spend_amount' => $campaign->spend_amount,
             'progress' => min(100, $progress),
             'scheduled_at' => $campaign->scheduled_at?->toISOString(),
             'started_at' => $campaign->started_at?->toISOString(),

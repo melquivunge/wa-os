@@ -79,7 +79,9 @@ export type LoginInput = {
 export type CreateCampaignInput = {
   name: string;
   audience_name: string;
+  team_name: string;
   message_count: number;
+  spend_amount: number;
   scheduled_at: string | null;
   status: "draft" | "scheduled";
 };
@@ -88,12 +90,14 @@ export type Campaign = {
   id: string;
   name: string;
   audience_name: string;
+  team_name: string;
   channel: string;
   status: string;
   message_count: number;
   delivered_count: number;
   read_count: number;
   failed_count: number;
+  spend_amount: number;
   progress: number;
   scheduled_at: string | null;
 };
