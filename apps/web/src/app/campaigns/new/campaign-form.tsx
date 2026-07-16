@@ -56,7 +56,7 @@ export function CampaignForm({ audiences, templates }: CampaignFormProps) {
   const initialTeam = audiences[0]?.team_name ?? templates[0]?.team_name ?? "all";
   const [form, setForm] = useState<FormState>({
     name: "",
-    audienceId: audiences.find((audience) => audience.team_name === initialTeam)?.id ?? audiences[0]?.id ?? "",
+    audienceId: "",
     templateId: "",
     date: "",
     time: "",
