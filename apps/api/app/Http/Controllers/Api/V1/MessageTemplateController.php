@@ -24,17 +24,101 @@ class MessageTemplateController extends Controller
             ->orderByRaw("status = 'approved' desc")
             ->orderBy('name')
             ->get()
-            ->map(fn (MessageTemplate $template): array => [
-                'id' => $template->id,
-                'name' => $template->name,
-                'team_name' => $template->team_name,
-                'category' => $template->category,
-                'status' => $template->status,
-                'language' => $template->language,
-                'body' => $template->body,
-                'last_used_at' => $template->last_used_at?->toISOString(),
-            ]);
+            ->map(fn (MessageTemplate $template): array => $this->serialize($template));
 
         return response()->json(['data' => $templates]);
+    }
+
+    public function sync(TenantContext $context): JsonResponse
+    {
+        abort_unless($context->membership()->role->canWriteMarketingData(), 403);
+
+        $catalog = [
+            [
+                'name' => 'Oferta relâmpago',
+                'team_name' => 'CRM',
+                'category' => 'marketing',
+                'status' => 'approved',
+                'language' => 'pt_BR',
+                'body' => 'Olá {{nome}}, sua oferta de inverno está pronta. Use o cupom {{cupom}} até hoje.',
+            ],
+            [
+                'name' => 'Boas-vindas pós-cadastro',
+                'team_name' => 'Growth',
+                'category' => 'onboarding',
+                'status' => 'approved',
+                'language' => 'pt_BR',
+                'body' => 'Bem-vindo ao Acme Studio, {{nome}}. Veja seus próximos passos aqui: {{link}}',
+            ],
+            [
+                'name' => 'Reativação 30 dias',
+                'team_name' => 'Retenção',
+                'category' => 'retention',
+                'status' => 'approved',
+                'language' => 'pt_BR',
+                'body' => '{{nome}}, sentimos sua falta. Preparamos uma condição especial para voltar.',
+            ],
+            [
+                'name' => 'Confirmação de pedido',
+                'team_name' => 'Produto',
+                'category' => 'utility',
+                'status' => 'approved',
+                'language' => 'pt_BR',
+                'body' => 'Pedido {{pedido}} confirmado. Acompanhe a entrega por aqui: {{link}}',
+            ],
+            [
+                'name' => 'Cupom aniversário',
+                'team_name' => 'CRM',
+                'category' => 'marketing',
+                'status' => 'rejected',
+                'language' => 'pt_BR',
+                'body' => '{{nome}}, seu presente chegou: {{cupom}}.',
+            ],
+        ];
+
+        $created = 0;
+        $updated = 0;
+        $templates = collect($catalog)->map(function (array $template) use ($context, &$created, &$updated): MessageTemplate {
+            $model = MessageTemplate::updateOrCreate(
+                [
+                    'organization_id' => $context->organization()->id,
+                    'name' => $template['name'],
+                    'language' => $template['language'],
+                ],
+                [
+                    ...$template,
+                    'last_used_at' => $template['status'] === 'approved' ? now() : null,
+                ],
+            );
+
+            $model->wasRecentlyCreated ? $created++ : $updated++;
+
+            return $model;
+        });
+
+        return response()->json([
+            'data' => [
+                'created' => $created,
+                'updated' => $updated,
+                'approved' => $templates->where('status', 'approved')->count(),
+                'rejected' => $templates->where('status', 'rejected')->count(),
+                'synced_at' => now()->toISOString(),
+                'templates' => $templates->map(fn (MessageTemplate $template): array => $this->serialize($template))->values(),
+            ],
+        ]);
+    }
+
+    private function serialize(MessageTemplate $template): array
+    {
+        return [
+            'id' => $template->id,
+            'name' => $template->name,
+            'team_name' => $template->team_name,
+            'category' => $template->category,
+            'status' => $template->status,
+            'language' => $template->language,
+            'body' => $template->body,
+            'last_used_at' => $template->last_used_at?->toISOString(),
+        ];
     }
 }
