@@ -1,0 +1,4 @@
+.env
+.phpunit.cache
+storage/logs/*.log
+vendor

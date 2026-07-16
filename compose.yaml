@@ -1,6 +1,65 @@
 name: wa-os
 
 services:
+  api:
+    build:
+      context: ./apps/api
+    command: >
+      sh -lc "
+        test -f vendor/autoload.php || composer install &&
+        test -f .env || cp .env.example .env &&
+        if ! grep -q '^APP_KEY=base64:' .env && test -z \"$${APP_KEY}\"; then php artisan key:generate; fi &&
+        php artisan migrate --seed --force &&
+        php artisan serve --host=0.0.0.0 --port=8000
+      "
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+      APP_URL: http://localhost:${API_PORT:-8000}
+      COMPOSER_ALLOW_SUPERUSER: "1"
+      FRONTEND_URL: http://localhost:${WEB_PORT:-3000}
+      FRONTEND_ORIGINS: http://localhost:${WEB_PORT:-3000}
+      SANCTUM_STATEFUL_DOMAINS: localhost:${WEB_PORT:-3000},127.0.0.1:${WEB_PORT:-3000}
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: ${POSTGRES_DB:-wa_os}
+      DB_USERNAME: ${POSTGRES_USER:-wa_os}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-wa_os_local}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    ports:
+      - "${API_PORT:-8000}:8000"
+    volumes:
+      - ./apps/api:/app
+      - api-vendor:/app/vendor
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ./apps/web
+    command: >
+      sh -lc "
+        test -d node_modules/next || npm install &&
+        npm run dev -- --hostname 0.0.0.0
+      "
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:${API_PORT:-8000}
+      API_INTERNAL_URL: http://api:8000
+      WATCHPACK_POLLING: "true"
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+    volumes:
+      - ./apps/web:/app
+      - web-node-modules:/app/node_modules
+      - web-next:/app/.next
+    depends_on:
+      - api
+
   postgres:
     image: postgres:17-alpine
     environment:
@@ -31,5 +90,8 @@ services:
       retries: 10
 
 volumes:
+  api-vendor:
   postgres-data:
   redis-data:
+  web-next:
+  web-node-modules:
