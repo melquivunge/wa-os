@@ -128,6 +128,28 @@ class CampaignTest extends TestCase
             ->assertJsonValidationErrors(['message_template_id']);
     }
 
+    public function test_campaign_creation_rejects_empty_audience(): void
+    {
+        [$organization, $marketing] = $this->membership(OrganizationRole::Marketing);
+        [, $template] = $this->campaignResources($organization);
+        $emptyAudience = Audience::create([
+            'organization_id' => $organization->id,
+            'name' => 'Empty segment',
+            'team_name' => 'CRM',
+            'contact_count' => 0,
+            'estimated_spend_amount' => 0,
+        ]);
+
+        $this->actingAs($marketing)->withHeader('X-Organization-ID', $organization->id)
+            ->postJson('/api/v1/campaigns', [
+                'name' => 'Empty audience attempt',
+                'audience_id' => $emptyAudience->id,
+                'message_template_id' => $template->id,
+            ])->assertUnprocessable()
+            ->assertJsonValidationErrors(['audience_id'])
+            ->assertJsonPath('errors.audience_id.0', 'A audiência precisa ter pelo menos um contato antes de criar campanha.');
+    }
+
     public function test_summary_returns_totals_and_active_campaign(): void
     {
         [$organization, $user] = $this->membership(OrganizationRole::Analyst);

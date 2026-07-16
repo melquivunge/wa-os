@@ -64,6 +64,12 @@ class CampaignController extends Controller
             ->whereBelongsTo($context->organization())
             ->where('status', 'approved')
             ->findOrFail($data['message_template_id']);
+        if ($audience->contact_count <= 0) {
+            throw ValidationException::withMessages([
+                'audience_id' => ['A audiência precisa ter pelo menos um contato antes de criar campanha.'],
+            ]);
+        }
+
         if ($template->team_name !== $audience->team_name) {
             throw ValidationException::withMessages([
                 'message_template_id' => ['O template precisa pertencer ao mesmo time da audiência.'],
