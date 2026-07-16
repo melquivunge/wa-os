@@ -1,6 +1,16 @@
 "use client";
 
-import { AlertCircle, CheckCircle2, ChevronRight, Send } from "lucide-react";
+import {
+  AlertCircle,
+  CalendarClock,
+  CheckCircle2,
+  ChevronRight,
+  Eye,
+  Megaphone,
+  Send,
+  ShieldCheck,
+  UsersRound,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -21,10 +31,23 @@ type FormState = {
   time: string;
 };
 
-const steps = ["Detalhes", "Audiência", "Template"];
+const steps = ["Detalhes", "Audiência", "Template", "Revisão"];
 
 function firstError(errors: Record<string, string[]>, field: string) {
   return errors[field]?.[0] ?? null;
+}
+
+function templateVariables(body: string) {
+  const variables = Array.from(body.matchAll(/\{\{\s*([^}\s]+)\s*\}\}/g), (match) => match[1]);
+
+  return Array.from(new Set(variables));
+}
+
+function previewBody(body: string) {
+  return body
+    .replace(/\{\{\s*nome\s*\}\}/gi, "Marina")
+    .replace(/\{\{\s*cupom\s*\}\}/gi, "WA20")
+    .replace(/\{\{\s*([^}\s]+)\s*\}\}/g, "valor demo");
 }
 
 export function CampaignForm({ audiences, templates }: CampaignFormProps) {
@@ -43,10 +66,22 @@ export function CampaignForm({ audiences, templates }: CampaignFormProps) {
   const [message, setMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const teams = useMemo(() => Array.from(new Set([
-    ...audiences.map((audience) => audience.team_name),
-    ...templates.map((template) => template.team_name),
-  ])).sort((first, second) => first.localeCompare(second, "pt-BR")), [audiences, templates]);
+  const currencyFormatter = useMemo(
+    () => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }),
+    [],
+  );
+  const numberFormatter = useMemo(() => new Intl.NumberFormat("pt-BR"), []);
+  const dateFormatter = useMemo(
+    () => new Intl.DateTimeFormat("pt-BR", { dateStyle: "medium", timeStyle: "short" }),
+    [],
+  );
+  const teams = useMemo(
+    () => Array.from(new Set([
+      ...audiences.map((audience) => audience.team_name),
+      ...templates.map((template) => template.team_name),
+    ])).sort((first, second) => first.localeCompare(second, "pt-BR")),
+    [audiences, templates],
+  );
   const filteredAudiences = useMemo(
     () => audiences.filter((audience) => teamFilter === "all" || audience.team_name === teamFilter),
     [audiences, teamFilter],
@@ -64,10 +99,20 @@ export function CampaignForm({ audiences, templates }: CampaignFormProps) {
     () => templates.find((template) => template.id === form.templateId) ?? null,
     [templates, form.templateId],
   );
+  const scheduledAt = form.date && form.time ? `${form.date}T${form.time}:00` : null;
+  const scheduleLabel = scheduledAt ? dateFormatter.format(new Date(scheduledAt)) : "Salvar como rascunho";
   const templateMatchesAudience = Boolean(selectedTemplate && (!selectedAudience || selectedTemplate.team_name === selectedAudience.team_name));
-  const status = form.date && form.time ? "scheduled" : "draft";
-  const currencyFormatter = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
-  const numberFormatter = new Intl.NumberFormat("pt-BR");
+  const audienceHasContacts = Boolean(selectedAudience && selectedAudience.contact_count > 0);
+  const status = scheduledAt ? "scheduled" : "draft";
+  const variables = selectedTemplate ? templateVariables(selectedTemplate.body) : [];
+  const checklist = [
+    { label: "Nome definido", ready: form.name.trim().length > 0 },
+    { label: "Audiência com contatos", ready: audienceHasContacts },
+    { label: "Template aprovado do mesmo time", ready: templateMatchesAudience },
+    { label: "Agenda ou rascunho definido", ready: true },
+  ];
+  const readyToCreate = checklist.every((item) => item.ready);
+  const hasNoResources = audiences.length === 0 || templates.length === 0;
 
   function updateField(field: keyof FormState, value: string) {
     setForm((current) => {
@@ -108,9 +153,10 @@ export function CampaignForm({ audiences, templates }: CampaignFormProps) {
 
   function canAdvance() {
     if (step === 0) return form.name.trim().length > 0;
-    if (step === 1) return Boolean(selectedAudience);
+    if (step === 1) return Boolean(selectedAudience) && audienceHasContacts;
+    if (step === 2) return templateMatchesAudience;
 
-    return templateMatchesAudience;
+    return readyToCreate;
   }
 
   function goNext() {
@@ -119,16 +165,15 @@ export function CampaignForm({ audiences, templates }: CampaignFormProps) {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!selectedAudience || !selectedTemplate || !templateMatchesAudience) {
-      setMessage("Escolha uma audiência e um template aprovado antes de salvar.");
+    if (!selectedAudience || !selectedTemplate || !readyToCreate) {
+      setMessage("Complete os itens da revisão antes de salvar a campanha.");
+      setStep(3);
       return;
     }
 
     setIsSubmitting(true);
     setErrors({});
     setMessage(null);
-
-    const scheduledAt = form.date && form.time ? `${form.date}T${form.time}:00` : null;
 
     try {
       await campaignApi.create({
@@ -173,6 +218,16 @@ export function CampaignForm({ audiences, templates }: CampaignFormProps) {
           </div>
         ) : null}
 
+        {hasNoResources ? (
+          <div className="empty-resource">
+            Antes de criar uma campanha, confirme que existe pelo menos uma audiência e um template aprovado.
+            <div className="inline-actions">
+              <Link href="/audiences">Criar audiência</Link>
+              <Link href="/templates">Sincronizar templates</Link>
+            </div>
+          </div>
+        ) : null}
+
         {step === 0 ? (
           <div className="wizard-panel">
             <label>
@@ -189,13 +244,17 @@ export function CampaignForm({ audiences, templates }: CampaignFormProps) {
             </label>
             <div className="form-grid">
               <label>
-                <span>Data</span>
+                <span>Data de envio</span>
                 <input onChange={(event) => updateField("date", event.target.value)} type="date" value={form.date} />
               </label>
               <label>
                 <span>Hora</span>
                 <input onChange={(event) => updateField("time", event.target.value)} type="time" value={form.time} />
               </label>
+            </div>
+            <div className="review-note">
+              <CalendarClock aria-hidden="true" size={18} />
+              <p>Sem data e hora, a campanha fica em rascunho para publicação manual.</p>
             </div>
           </div>
         ) : null}
@@ -214,20 +273,27 @@ export function CampaignForm({ audiences, templates }: CampaignFormProps) {
               </select>
             </label>
             <div className="choice-grid">
-              {filteredAudiences.map((audience) => (
-                <button
-                  aria-pressed={form.audienceId === audience.id}
-                  className={form.audienceId === audience.id ? "choice-card selected" : "choice-card"}
-                  key={audience.id}
-                  onClick={() => updateField("audienceId", audience.id)}
-                  type="button"
-                >
-                  <span>{audience.team_name}</span>
-                  <b>{audience.name}</b>
-                  <small>{audience.source}</small>
-                  <i>{numberFormatter.format(audience.contact_count)} contatos · {currencyFormatter.format(audience.estimated_spend_amount)}</i>
-                </button>
-              ))}
+              {filteredAudiences.map((audience) => {
+                const isEmpty = audience.contact_count <= 0;
+
+                return (
+                  <button
+                    aria-pressed={form.audienceId === audience.id}
+                    className={form.audienceId === audience.id ? "choice-card selected" : "choice-card"}
+                    key={audience.id}
+                    onClick={() => updateField("audienceId", audience.id)}
+                    type="button"
+                  >
+                    <span>{audience.team_name}</span>
+                    <b>{audience.name}</b>
+                    <small>{audience.source}</small>
+                    <i>
+                      {numberFormatter.format(audience.contact_count)} contatos · {currencyFormatter.format(audience.estimated_spend_amount)}
+                      {isEmpty ? " · precisa de contatos" : ""}
+                    </i>
+                  </button>
+                );
+              })}
             </div>
             {filteredAudiences.length === 0 ? <div className="empty-resource">Nenhuma audiência encontrada para este time.</div> : null}
             {firstError(errors, "audienceId") ? <small>{firstError(errors, "audienceId")}</small> : null}
@@ -257,6 +323,27 @@ export function CampaignForm({ audiences, templates }: CampaignFormProps) {
           </div>
         ) : null}
 
+        {step === 3 ? (
+          <div className="wizard-panel">
+            <div className="launch-card">
+              <div>
+                <span className="eyebrow">REVISÃO FINAL</span>
+                <h2>{form.name || "Campanha sem nome"}</h2>
+                <p>{scheduleLabel} · {selectedAudience?.team_name ?? "Time pendente"}</p>
+              </div>
+              <b>{readyToCreate ? "Pronta" : "Pendente"}</b>
+            </div>
+            <div className="readiness-list">
+              {checklist.map((item) => (
+                <div className={item.ready ? "ready" : "pending"} key={item.label}>
+                  {item.ready ? <CheckCircle2 aria-hidden="true" size={18} /> : <AlertCircle aria-hidden="true" size={18} />}
+                  <span>{item.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
+
         <div className="form-actions wizard-actions">
           {step === 0 ? (
             <Link className="secondary-button" href="/campaigns">Cancelar</Link>
@@ -264,24 +351,65 @@ export function CampaignForm({ audiences, templates }: CampaignFormProps) {
             <button className="secondary-button" onClick={() => setStep((current) => Math.max(current - 1, 0))} type="button">Voltar</button>
           )}
           {step < steps.length - 1 ? (
-            <button className="primary-button" disabled={!canAdvance()} onClick={goNext} type="button">
+            <button className="primary-button" disabled={!canAdvance() || hasNoResources} onClick={goNext} type="button">
               Continuar <ChevronRight aria-hidden="true" size={18} />
             </button>
           ) : (
-            <button className="primary-button" disabled={isSubmitting || !selectedAudience || !templateMatchesAudience} type="submit">
+            <button className="primary-button" disabled={isSubmitting || !readyToCreate} type="submit">
               <Send aria-hidden="true" size={18} /> {isSubmitting ? "Salvando..." : "Salvar campanha"}
             </button>
           )}
         </div>
       </form>
 
-      <aside className="campaign-preview" aria-label="Prévia da campanha">
-        <div><CheckCircle2 aria-hidden="true" size={19} /><span>Status inicial</span><b>{status === "scheduled" ? "Agendada" : "Rascunho"}</b></div>
-        <div><CheckCircle2 aria-hidden="true" size={19} /><span>Time</span><b>{selectedAudience?.team_name ?? "—"}</b></div>
-        <div><CheckCircle2 aria-hidden="true" size={19} /><span>Gasto estimado</span><b>{currencyFormatter.format(selectedAudience?.estimated_spend_amount ?? 0)}</b></div>
-        <div><CheckCircle2 aria-hidden="true" size={19} /><span>Audiência</span><b>{selectedAudience ? `${selectedAudience.name} · ${numberFormatter.format(selectedAudience.contact_count)} contatos` : "—"}</b></div>
-        <div><CheckCircle2 aria-hidden="true" size={19} /><span>Template</span><b>{selectedTemplate?.name ?? "—"}</b></div>
-        <div><CheckCircle2 aria-hidden="true" size={19} /><span>Canal</span><b>WhatsApp</b></div>
+      <aside className="campaign-preview launch-preview" aria-label="Prévia da campanha">
+        <div className="preview-hero">
+          <span><Megaphone aria-hidden="true" size={18} /> Campanha WhatsApp</span>
+          <h2>{form.name || "Nomeie a campanha"}</h2>
+          <p>{selectedTemplate ? previewBody(selectedTemplate.body) : "Escolha um template para ver a mensagem que será simulada."}</p>
+        </div>
+
+        <div className="preview-metrics">
+          <div>
+            <UsersRound aria-hidden="true" size={18} />
+            <span>Contatos</span>
+            <b>{numberFormatter.format(selectedAudience?.contact_count ?? 0)}</b>
+          </div>
+          <div>
+            <ShieldCheck aria-hidden="true" size={18} />
+            <span>Time</span>
+            <b>{selectedAudience?.team_name ?? "—"}</b>
+          </div>
+          <div>
+            <Eye aria-hidden="true" size={18} />
+            <span>Status</span>
+            <b>{status === "scheduled" ? "Agendada" : "Rascunho"}</b>
+          </div>
+        </div>
+
+        <div className="preview-row">
+          <span>Gasto estimado</span>
+          <b>{currencyFormatter.format(selectedAudience?.estimated_spend_amount ?? 0)}</b>
+        </div>
+        <div className="preview-row">
+          <span>Audiência</span>
+          <b>{selectedAudience?.name ?? "Selecione"}</b>
+        </div>
+        <div className="preview-row">
+          <span>Template</span>
+          <b>{selectedTemplate?.name ?? "Selecione"}</b>
+        </div>
+        <div className="preview-row">
+          <span>Agenda</span>
+          <b>{scheduleLabel}</b>
+        </div>
+
+        <div className="variable-strip">
+          <span>Variáveis</span>
+          <div>
+            {variables.length > 0 ? variables.map((variable) => <b key={variable}>{`{{${variable}}}`}</b>) : <b>Nenhuma</b>}
+          </div>
+        </div>
       </aside>
     </>
   );

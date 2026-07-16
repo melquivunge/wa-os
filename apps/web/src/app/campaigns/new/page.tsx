@@ -21,18 +21,18 @@ export default async function NewCampaignPage() {
   return (
     <AppShell activePath="/campaigns">
       <div className="campaign-workspace">
-      <header className="campaign-header">
-        <div>
-          <Link className="back-link" href="/campaigns"><ArrowLeft aria-hidden="true" size={17} /> Campanhas</Link>
-          <p className="eyebrow">NOVA CAMPANHA</p>
-          <h1>Criar campanha</h1>
-          <p>Prepare nome, audiência e agenda. A integração real com a Meta fica para o próximo marco.</p>
-        </div>
-      </header>
+        <header className="campaign-header">
+          <div>
+            <Link className="back-link" href="/campaigns"><ArrowLeft aria-hidden="true" size={17} /> Campanhas</Link>
+            <p className="eyebrow">NOVA CAMPANHA</p>
+            <h1>Criar campanha</h1>
+            <p>Prepare nome, audiência, template e revisão operacional. A integração real com a Meta fica para o próximo marco.</p>
+          </div>
+        </header>
 
-      <section className="campaign-form-layout">
-        <CampaignForm audiences={audiences} templates={templates} />
-      </section>
+        <section className="campaign-form-layout">
+          <CampaignForm audiences={audiences} templates={templates} />
+        </section>
       </div>
     </AppShell>
   );
