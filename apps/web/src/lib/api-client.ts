@@ -209,6 +209,16 @@ export const campaignApi = {
   },
 };
 
+export const audienceApi = {
+  async create(input: { name: string; team_name: string; status: "all" | "active" | "inactive"; tag?: string }) {
+    await prepareCookieSession();
+    return request<{ data: Audience }>("/api/v1/audiences", {
+      method: "POST",
+      body: JSON.stringify(input),
+    });
+  },
+};
+
 export const organizationMemberApi = {
   async create(organizationId: string, input: { name: string; email: string; role: OrganizationRole }) {
     await prepareCookieSession();
