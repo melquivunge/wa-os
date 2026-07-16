@@ -2,7 +2,9 @@ import { ReceiptText, RefreshCcw, UsersRound, Wand2 } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { requireAuthenticatedUser } from "@/lib/server-auth";
 import { serverApiGet } from "@/lib/server-api";
+import type { OrganizationRole } from "@/lib/api-client";
 import { TeamFilterList } from "../shared/team-filter-list";
+import { AudienceBuilder } from "./audience-builder";
 
 type Audience = {
   id: string;
@@ -16,6 +18,13 @@ type Audience = {
 };
 
 type AudiencesResponse = { data: Audience[] };
+type Contact = {
+  id: string;
+  team_name: string;
+  status: string;
+  tags: string[];
+};
+type ContactsResponse = { data: Contact[] };
 
 function formatDate(value: string | null) {
   if (!value) return "Pendente";
@@ -29,10 +38,16 @@ function formatDate(value: string | null) {
 }
 
 export default async function AudiencesPage() {
-  await requireAuthenticatedUser();
+  const user = await requireAuthenticatedUser();
 
-  const response = await serverApiGet<AudiencesResponse>("/api/v1/audiences");
+  const [response, contactsResponse] = await Promise.all([
+    serverApiGet<AudiencesResponse>("/api/v1/audiences"),
+    serverApiGet<ContactsResponse>("/api/v1/contacts"),
+  ]);
   const audiences = response?.data ?? [];
+  const sourceContacts = contactsResponse?.data ?? [];
+  const currentRole = user.active_organization.role as OrganizationRole;
+  const canCreateAudience = currentRole === "owner" || currentRole === "admin" || currentRole === "marketing";
   const numberFormatter = new Intl.NumberFormat("pt-BR");
   const currencyFormatter = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
   const contacts = audiences.reduce((total, audience) => total + audience.contact_count, 0);
@@ -46,9 +61,11 @@ export default async function AudiencesPage() {
           <div>
             <p className="eyebrow">SEGMENTOS OPERACIONAIS</p>
             <h1>Audiências</h1>
-            <p>Compare públicos por time, tamanho e gasto estimado antes de montar a campanha.</p>
+            <p>Compare públicos por time, tamanho e gasto estimado — ou crie um segmento demo a partir dos contatos importados.</p>
           </div>
         </header>
+
+        <AudienceBuilder canCreate={canCreateAudience} contacts={sourceContacts} />
 
         <section className="campaign-stats" aria-label="Resumo de audiências">
           <article><UsersRound aria-hidden="true" size={20} /><span>Audiências</span><b>{audiences.length}</b></article>
