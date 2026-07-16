@@ -85,6 +85,124 @@ class CrmFoundationTest extends TestCase
             ->assertJsonMissing(['name' => 'Foreign audience']);
     }
 
+    public function test_marketing_can_build_audience_from_contacts(): void
+    {
+        [$organization, $user] = $this->membership(OrganizationRole::Marketing);
+
+        Contact::create([
+            'organization_id' => $organization->id,
+            'name' => 'Vip Active',
+            'phone' => '+5511999990301',
+            'team_name' => 'CRM',
+            'status' => 'active',
+            'tags' => ['VIP', 'Julho'],
+        ]);
+        Contact::create([
+            'organization_id' => $organization->id,
+            'name' => 'Vip Inactive',
+            'phone' => '+5511999990302',
+            'team_name' => 'CRM',
+            'status' => 'inactive',
+            'tags' => ['VIP'],
+        ]);
+        Contact::create([
+            'organization_id' => $organization->id,
+            'name' => 'Other Active',
+            'phone' => '+5511999990303',
+            'team_name' => 'CRM',
+            'status' => 'active',
+            'tags' => ['Regular'],
+        ]);
+        Contact::create([
+            'organization_id' => $organization->id,
+            'name' => 'Foreign Team',
+            'phone' => '+5511999990304',
+            'team_name' => 'Growth',
+            'status' => 'active',
+            'tags' => ['VIP'],
+        ]);
+
+        $this->actingAs($user)->withHeader('X-Organization-ID', $organization->id)
+            ->postJson('/api/v1/audiences', [
+                'name' => 'VIP ativos',
+                'team_name' => 'CRM',
+                'status' => 'active',
+                'tag' => 'VIP',
+            ])
+            ->assertCreated()
+            ->assertJsonPath('data.name', 'VIP ativos')
+            ->assertJsonPath('data.contact_count', 1)
+            ->assertJsonPath('data.estimated_spend_amount', 30)
+            ->assertJsonPath('data.rules.2', 'Tag: VIP');
+
+        $this->assertDatabaseHas('audiences', [
+            'organization_id' => $organization->id,
+            'name' => 'VIP ativos',
+            'team_name' => 'CRM',
+            'contact_count' => 1,
+            'estimated_spend_amount' => 30,
+        ]);
+    }
+
+    public function test_analyst_cannot_build_audience(): void
+    {
+        [$organization, $user] = $this->membership(OrganizationRole::Analyst);
+
+        $this->actingAs($user)->withHeader('X-Organization-ID', $organization->id)
+            ->postJson('/api/v1/audiences', [
+                'name' => 'Bloqueado',
+                'team_name' => 'CRM',
+                'status' => 'all',
+            ])
+            ->assertForbidden();
+    }
+
+    public function test_audience_builder_rejects_duplicate_name_in_same_tenant(): void
+    {
+        [$organization, $user] = $this->membership(OrganizationRole::Marketing);
+
+        Audience::create([
+            'organization_id' => $organization->id,
+            'name' => 'Clientes VIP',
+            'team_name' => 'CRM',
+        ]);
+
+        $this->actingAs($user)->withHeader('X-Organization-ID', $organization->id)
+            ->postJson('/api/v1/audiences', [
+                'name' => 'Clientes VIP',
+                'team_name' => 'CRM',
+                'status' => 'all',
+            ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('name');
+    }
+
+    public function test_audience_builder_rejects_empty_segments(): void
+    {
+        [$organization, $user] = $this->membership(OrganizationRole::Marketing);
+
+        Contact::create([
+            'organization_id' => $organization->id,
+            'name' => 'Growth Active',
+            'phone' => '+5511999990305',
+            'team_name' => 'Growth',
+            'status' => 'active',
+            'tags' => ['VIP'],
+        ]);
+
+        $this->actingAs($user)->withHeader('X-Organization-ID', $organization->id)
+            ->postJson('/api/v1/audiences', [
+                'name' => 'CRM vazio',
+                'team_name' => 'CRM',
+                'status' => 'active',
+                'tag' => 'VIP',
+            ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('team_name');
+
+        $this->assertDatabaseMissing('audiences', ['name' => 'CRM vazio']);
+    }
+
     public function test_message_templates_are_tenant_scoped(): void
     {
         [$organization, $user] = $this->membership(OrganizationRole::Analyst);
