@@ -13,7 +13,7 @@ type CampaignActionsClientProps = {
 };
 
 const actionLabels = {
-  start: "Iniciar",
+  start: "Simular envio",
   pause: "Pausar",
   resume: "Retomar",
   cancel: "Cancelar",
@@ -44,7 +44,7 @@ export function CampaignActionsClient({ campaignId, status }: CampaignActionsCli
       const details = [...errors, ...response.data.warnings];
       setValidation({
         ready: response.data.ready,
-        text: response.data.ready ? "Campanha pronta para iniciar." : details.join(" "),
+        text: response.data.ready ? "Campanha pronta para simular envio." : details.join(" "),
       });
     } catch (caught) {
       setError(caught instanceof ApiError ? caught.message : "Não foi possível validar a campanha.");
@@ -89,7 +89,7 @@ export function CampaignActionsClient({ campaignId, status }: CampaignActionsCli
             </button>
             <button className="primary-action" disabled={isBusy} onClick={() => void runAction("start")} type="button">
               <Rocket aria-hidden="true" size={16} />
-              {runningAction === "start" ? "Iniciando..." : actionLabels.start}
+              {runningAction === "start" ? "Simulando..." : actionLabels.start}
             </button>
           </>
         ) : null}
