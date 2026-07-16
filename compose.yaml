@@ -4,14 +4,7 @@ services:
   api:
     build:
       context: ./apps/api
-    command: >
-      sh -lc "
-        test -f vendor/autoload.php || composer install &&
-        test -f .env || cp .env.example .env &&
-        if ! grep -q '^APP_KEY=base64:' .env && test -z \"$${APP_KEY}\"; then php artisan key:generate; fi &&
-        php artisan migrate --seed --force &&
-        php artisan serve --host=0.0.0.0 --port=8000
-      "
+    command: sh docker/dev-entrypoint.sh
     environment:
       APP_ENV: local
       APP_DEBUG: "true"
