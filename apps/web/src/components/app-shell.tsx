@@ -28,7 +28,7 @@ const navItems = [
 ];
 
 type AppShellProps = {
-  activePath: "/" | "/campaigns" | "/contacts" | "/audiences" | "/templates" | "/analytics";
+  activePath: "/" | "/campaigns" | "/contacts" | "/audiences" | "/templates" | "/analytics" | "/settings";
   children: ReactNode;
 };
 
@@ -53,7 +53,7 @@ export function AppShell({ activePath, children }: AppShellProps) {
         </nav>
 
         <div className="sidebar-bottom">
-          <button className="nav-item" type="button"><Settings aria-hidden="true" size={18} /> Configurações</button>
+          <Link className={activePath === "/settings" ? "nav-item active" : "nav-item"} href="/settings"><Settings aria-hidden="true" size={18} /> Configurações</Link>
           <button className="nav-item" type="button"><CircleHelp aria-hidden="true" size={18} /> Ajuda e suporte</button>
           <div className="upgrade-card">
             <span className="upgrade-icon"><Sparkles aria-hidden="true" size={17} /></span>
