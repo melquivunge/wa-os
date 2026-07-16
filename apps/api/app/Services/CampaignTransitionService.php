@@ -9,10 +9,75 @@ class CampaignTransitionService
 {
     /** @var array<string, list<string>> */
     private const ALLOWED_TRANSITIONS = [
+        'start' => ['draft', 'scheduled'],
         'pause' => ['scheduled', 'sending'],
         'resume' => ['paused'],
         'cancel' => ['draft', 'scheduled', 'sending', 'paused'],
     ];
+
+    /** @return array{ready: bool, errors: array<string, list<string>>, warnings: list<string>} */
+    public function validate(Campaign $campaign): array
+    {
+        $campaign->loadMissing(['audience', 'messageTemplate']);
+
+        $errors = [];
+        $warnings = [];
+
+        if ($campaign->status === 'canceled' || $campaign->status === 'completed' || $campaign->status === 'failed') {
+            $errors['status'][] = 'A campanha já está em um estado terminal.';
+        }
+
+        if ($campaign->audience === null) {
+            $errors['audience_id'][] = 'Selecione uma audiência antes de iniciar.';
+        } elseif ($campaign->audience->contact_count < 1) {
+            $errors['audience_id'][] = 'A audiência não possui contatos elegíveis.';
+        }
+
+        if ($campaign->messageTemplate === null) {
+            $errors['message_template_id'][] = 'Selecione um template aprovado antes de iniciar.';
+        } elseif ($campaign->messageTemplate->status !== 'approved') {
+            $errors['message_template_id'][] = 'O template precisa estar aprovado.';
+        }
+
+        if ($campaign->audience !== null && $campaign->messageTemplate !== null && $campaign->audience->team_name !== $campaign->messageTemplate->team_name) {
+            $errors['team_name'][] = 'A audiência e o template precisam pertencer ao mesmo time.';
+        }
+
+        if ($campaign->message_count < 1) {
+            $errors['message_count'][] = 'A campanha precisa ter pelo menos um destinatário.';
+        }
+
+        if ($campaign->status === 'scheduled' && $campaign->scheduled_at === null) {
+            $errors['scheduled_at'][] = 'Campanhas agendadas precisam de data de envio.';
+        }
+
+        if ($campaign->status === 'scheduled' && $campaign->scheduled_at !== null && $campaign->scheduled_at->isPast()) {
+            $warnings[] = 'A data agendada já passou; iniciar agora irá usar o horário atual.';
+        }
+
+        return [
+            'ready' => $errors === [],
+            'errors' => $errors,
+            'warnings' => $warnings,
+        ];
+    }
+
+    public function start(Campaign $campaign): Campaign
+    {
+        $this->ensureAllowed($campaign, 'start');
+        $validation = $this->validate($campaign);
+
+        if (! $validation['ready']) {
+            throw ValidationException::withMessages($validation['errors']);
+        }
+
+        $campaign->forceFill([
+            'status' => 'sending',
+            'started_at' => $campaign->started_at ?? now(),
+        ])->save();
+
+        return $campaign->refresh();
+    }
 
     public function pause(Campaign $campaign): Campaign
     {
