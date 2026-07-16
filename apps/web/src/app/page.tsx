@@ -111,7 +111,7 @@ export default async function Home() {
         </nav>
 
         <div className="sidebar-bottom">
-          <button className="nav-item" type="button"><Settings aria-hidden="true" size={18} /> Configurações</button>
+          <Link className="nav-item" href="/settings"><Settings aria-hidden="true" size={18} /> Configurações</Link>
           <button className="nav-item" type="button"><CircleHelp aria-hidden="true" size={18} /> Ajuda e suporte</button>
           <div className="upgrade-card">
             <span className="upgrade-icon"><Sparkles aria-hidden="true" size={17} /></span>
@@ -215,7 +215,7 @@ export default async function Home() {
               <thead><tr className="table-row table-header"><th>Campanha</th><th>Envio</th><th>Mensagens</th><th>Leitura</th><th>Status</th><th><span className="sr-only">Ações</span></th></tr></thead>
               <tbody>
               {campaigns.map((campaign, index) => (
-                <tr className="table-row" key={campaign.name}>
+                <tr className="table-row" key={campaign.id}>
                   <th scope="row" className="campaign-name"><i className={`campaign-dot dot-${index}`}><Megaphone aria-hidden="true" size={15} /></i><span><b>{campaign.name}</b><small>{campaign.audience_name}</small></span></th>
                   <td data-label="Envio">{campaign.scheduled_at ? new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }).format(new Date(campaign.scheduled_at)) : "Sem data"}</td>
                   <td data-label="Mensagens">{numberFormatter.format(campaign.message_count)}</td>
