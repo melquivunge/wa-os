@@ -71,9 +71,16 @@ class CampaignTransitionService
             throw ValidationException::withMessages($validation['errors']);
         }
 
+        $startedAt = $campaign->started_at ?? now();
+        $outcome = $this->simulateOutcome($campaign);
+
         $campaign->forceFill([
-            'status' => 'sending',
-            'started_at' => $campaign->started_at ?? now(),
+            'status' => 'completed',
+            'started_at' => $startedAt,
+            'completed_at' => $campaign->completed_at ?? $startedAt->copy()->addMinutes(12),
+            'delivered_count' => $outcome['delivered'],
+            'read_count' => $outcome['read'],
+            'failed_count' => $outcome['failed'],
         ])->save();
 
         return $campaign->refresh();
@@ -124,5 +131,23 @@ class CampaignTransitionService
                 $campaign->status,
             )],
         ]);
+    }
+
+    /** @return array{delivered: int, read: int, failed: int} */
+    private function simulateOutcome(Campaign $campaign): array
+    {
+        $messages = $campaign->message_count;
+        $hash = abs(crc32($campaign->id));
+        $failureRate = 2 + ($hash % 4);
+        $readRate = 74 + ($hash % 12);
+        $failed = (int) round($messages * ($failureRate / 100));
+        $delivered = max(0, $messages - $failed);
+        $read = (int) round($delivered * ($readRate / 100));
+
+        return [
+            'delivered' => min($messages, $delivered),
+            'read' => min($delivered, $read),
+            'failed' => min($messages, $failed),
+        ];
     }
 }
