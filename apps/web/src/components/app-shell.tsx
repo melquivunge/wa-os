@@ -24,11 +24,11 @@ const navItems = [
   { label: "Contatos", icon: ContactRound, href: "/contacts" },
   { label: "Audiências", icon: UsersRound, href: "/audiences" },
   { label: "Templates", icon: FileText, href: "/templates" },
-  { label: "Analytics", icon: BarChart3, href: "/" },
+  { label: "Analytics", icon: BarChart3, href: "/analytics" },
 ];
 
 type AppShellProps = {
-  activePath: "/" | "/campaigns" | "/contacts" | "/audiences" | "/templates";
+  activePath: "/" | "/campaigns" | "/contacts" | "/audiences" | "/templates" | "/analytics";
   children: ReactNode;
 };
 

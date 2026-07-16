@@ -166,6 +166,61 @@ class CampaignController extends Controller
         ]);
     }
 
+    public function analytics(TenantContext $context): JsonResponse
+    {
+        $campaigns = Campaign::query()
+            ->whereBelongsTo($context->organization())
+            ->get();
+        $totalMessages = max(1, $campaigns->sum('message_count'));
+
+        return response()->json([
+            'data' => [
+                'totals' => [
+                    'campaigns' => $campaigns->count(),
+                    'messages' => $campaigns->sum('message_count'),
+                    'delivered' => $campaigns->sum('delivered_count'),
+                    'read' => $campaigns->sum('read_count'),
+                    'failed' => $campaigns->sum('failed_count'),
+                    'spend' => $campaigns->sum('spend_amount'),
+                    'delivery_rate' => $this->rate($campaigns->sum('delivered_count'), $campaigns->sum('message_count')),
+                    'read_rate' => $this->rate($campaigns->sum('read_count'), $campaigns->sum('delivered_count')),
+                    'failure_rate' => $this->rate($campaigns->sum('failed_count'), $campaigns->sum('message_count')),
+                ],
+                'teams' => $campaigns
+                    ->groupBy('team_name')
+                    ->map(fn ($teamCampaigns, string $teamName): array => [
+                        'name' => $teamName,
+                        'campaigns' => $teamCampaigns->count(),
+                        'messages' => $teamCampaigns->sum('message_count'),
+                        'delivered' => $teamCampaigns->sum('delivered_count'),
+                        'read' => $teamCampaigns->sum('read_count'),
+                        'failed' => $teamCampaigns->sum('failed_count'),
+                        'spend' => $teamCampaigns->sum('spend_amount'),
+                        'share' => $this->rate($teamCampaigns->sum('message_count'), $totalMessages),
+                        'delivery_rate' => $this->rate($teamCampaigns->sum('delivered_count'), $teamCampaigns->sum('message_count')),
+                        'read_rate' => $this->rate($teamCampaigns->sum('read_count'), $teamCampaigns->sum('delivered_count')),
+                        'failure_rate' => $this->rate($teamCampaigns->sum('failed_count'), $teamCampaigns->sum('message_count')),
+                    ])
+                    ->sortByDesc('messages')
+                    ->values(),
+                'campaigns' => $campaigns
+                    ->sortByDesc(fn (Campaign $campaign): int => $campaign->read_count)
+                    ->values()
+                    ->map(fn (Campaign $campaign): array => [
+                        'id' => $campaign->id,
+                        'name' => $campaign->name,
+                        'team_name' => $campaign->team_name,
+                        'status' => $campaign->status,
+                        'messages' => $campaign->message_count,
+                        'spend' => $campaign->spend_amount,
+                        'delivery_rate' => $this->rate($campaign->delivered_count, $campaign->message_count),
+                        'read_rate' => $this->rate($campaign->read_count, $campaign->delivered_count),
+                        'failure_rate' => $this->rate($campaign->failed_count, $campaign->message_count),
+                    ]),
+            ],
+        ]);
+    }
+
     private function serialize(Campaign $campaign): array
     {
         $progress = $campaign->message_count > 0
@@ -239,6 +294,15 @@ class CampaignController extends Controller
         }
 
         return sprintf('+%s ••••-%s', substr($digits, 0, 2), substr($digits, -4));
+    }
+
+    private function rate(int|float $value, int|float $total): int
+    {
+        if ($total <= 0) {
+            return 0;
+        }
+
+        return (int) round(($value / $total) * 100);
     }
 
     private function authorizeCampaignOperation(Campaign $campaign, TenantContext $context): void
