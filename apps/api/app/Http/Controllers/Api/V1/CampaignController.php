@@ -95,6 +95,20 @@ class CampaignController extends Controller
         return response()->json(['data' => $this->serialize($campaign)]);
     }
 
+    public function validateCampaign(Campaign $campaign, TenantContext $context, CampaignTransitionService $transitions): JsonResponse
+    {
+        $this->authorizeCampaignOperation($campaign, $context);
+
+        return response()->json(['data' => $transitions->validate($campaign)]);
+    }
+
+    public function start(Campaign $campaign, TenantContext $context, CampaignTransitionService $transitions): JsonResponse
+    {
+        $this->authorizeCampaignOperation($campaign, $context);
+
+        return response()->json(['data' => $this->serialize($transitions->start($campaign)->load(['audience', 'messageTemplate']))]);
+    }
+
     public function pause(Campaign $campaign, TenantContext $context, CampaignTransitionService $transitions): JsonResponse
     {
         $this->authorizeCampaignOperation($campaign, $context);

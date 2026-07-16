@@ -164,7 +164,15 @@ export const campaignApi = {
     });
   },
 
-  async transition(id: string, action: "pause" | "resume" | "cancel") {
+  async validate(id: string) {
+    await prepareCookieSession();
+    return request<{ data: { ready: boolean; errors: Record<string, string[]>; warnings: string[] } }>(`/api/v1/campaigns/${id}/validate`, {
+      method: "POST",
+      body: JSON.stringify({}),
+    });
+  },
+
+  async transition(id: string, action: "start" | "pause" | "resume" | "cancel") {
     await prepareCookieSession();
     return request<{ data: Campaign }>(`/api/v1/campaigns/${id}/${action}`, {
       method: "POST",
