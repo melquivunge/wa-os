@@ -51,6 +51,7 @@ class CampaignValidationAndStartTest extends TestCase
         $this->assertNotNull($campaign->completed_at);
         $this->assertSame($campaign->message_count, $campaign->delivered_count + $campaign->failed_count);
         $this->assertGreaterThan(0, $campaign->read_count);
+        $this->assertSame(12, $campaign->recipients()->count());
     }
 
     public function test_start_rejects_campaign_with_unapproved_template(): void

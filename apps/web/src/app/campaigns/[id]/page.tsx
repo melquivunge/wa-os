@@ -7,6 +7,7 @@ import {
   Megaphone,
   MessageSquareText,
   ReceiptText,
+  Smartphone,
   UsersRound,
 } from "lucide-react";
 import Link from "next/link";
@@ -49,6 +50,13 @@ type CampaignDetail = {
     state: "done" | "current" | "pending";
     value: string | null;
   }>;
+  recipients: Array<{
+    id: string;
+    name: string;
+    phone: string;
+    status: "queued" | "delivered" | "read" | "failed";
+    last_event_at: string | null;
+  }>;
 };
 
 type CampaignDetailResponse = { data: CampaignDetail };
@@ -61,6 +69,13 @@ const statusLabels: Record<CampaignDetail["status"], string> = {
   paused: "Pausada",
   failed: "Falhou",
   canceled: "Cancelada",
+};
+
+const recipientStatusLabels: Record<CampaignDetail["recipients"][number]["status"], string> = {
+  queued: "Na fila",
+  delivered: "Entregue",
+  read: "Lida",
+  failed: "Falhou",
 };
 
 function formatDate(value: string | null) {
@@ -198,6 +213,36 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
               <div><dt>Status</dt><dd>{statusLabels[campaign.status]}</dd></div>
               <div><dt>Gasto</dt><dd>{currencyFormatter.format(campaign.spend_amount)}</dd></div>
             </dl>
+          </article>
+
+          <article className="campaign-detail-card recipient-detail-card">
+            <div className="resource-detail-title">
+              <span className="resource-icon"><Smartphone aria-hidden="true" size={18} /></span>
+              <div>
+                <h2>Destinatários acompanhados</h2>
+                <p>Amostra operacional com último evento registrado</p>
+              </div>
+            </div>
+            {campaign.recipients.length > 0 ? (
+              <div className="recipient-list">
+                {campaign.recipients.map((recipient) => (
+                  <div className="recipient-row" key={recipient.id}>
+                    <span className={`recipient-dot ${recipient.status}`} />
+                    <div>
+                      <b>{recipient.name}</b>
+                      <small>{recipient.phone}</small>
+                    </div>
+                    <strong className={`recipient-status ${recipient.status}`}>{recipientStatusLabels[recipient.status]}</strong>
+                    <time>{formatDate(recipient.last_event_at)}</time>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="recipient-empty">
+                <b>Nenhum destinatário acompanhado ainda.</b>
+                <span>Simule o envio para gerar eventos demonstrativos desta campanha.</span>
+              </div>
+            )}
           </article>
         </section>
       </div>
