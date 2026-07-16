@@ -7,6 +7,7 @@ use App\Models\Audience;
 use App\Models\Campaign;
 use App\Models\CampaignRecipient;
 use App\Models\Contact;
+use App\Models\ContactImport;
 use App\Models\MessageTemplate;
 use App\Models\Organization;
 use App\Models\User;
@@ -59,6 +60,19 @@ class DatabaseSeeder extends Seeder
                 $contact,
             );
         }
+
+        ContactImport::updateOrCreate(
+            ['organization_id' => $organization->id, 'source_name' => 'Carga inicial CRM julho'],
+            [
+                'team_name' => 'CRM',
+                'status' => 'processed',
+                'total_rows' => 4,
+                'accepted_rows' => 4,
+                'failed_rows' => 0,
+                'failure_samples' => [],
+                'processed_at' => now()->subMinutes(22),
+            ],
+        );
 
         $demoAudiences = [
             ['name' => 'Clientes ativos', 'team_name' => 'CRM', 'source' => 'Segmento dinâmico', 'contact_count' => 8142, 'estimated_spend_amount' => 244260, 'rules' => ['Comprou nos últimos 45 dias'], 'refreshed_at' => now()->subMinutes(12)],
