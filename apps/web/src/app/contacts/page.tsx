@@ -2,7 +2,9 @@ import { ContactRound, Filter, Tags, UsersRound } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { requireAuthenticatedUser } from "@/lib/server-auth";
 import { serverApiGet } from "@/lib/server-api";
+import type { ContactImport, OrganizationRole } from "@/lib/api-client";
 import { TeamFilterList } from "../shared/team-filter-list";
+import { ContactImportPanel } from "./contact-import-panel";
 
 type Contact = {
   id: string;
@@ -16,6 +18,7 @@ type Contact = {
 };
 
 type ContactsResponse = { data: Contact[] };
+type ContactImportsResponse = { data: ContactImport[] };
 
 function formatDate(value: string | null) {
   if (!value) return "Sem atividade";
@@ -29,10 +32,16 @@ function formatDate(value: string | null) {
 }
 
 export default async function ContactsPage() {
-  await requireAuthenticatedUser();
+  const user = await requireAuthenticatedUser();
 
-  const response = await serverApiGet<ContactsResponse>("/api/v1/contacts");
+  const [response, importsResponse] = await Promise.all([
+    serverApiGet<ContactsResponse>("/api/v1/contacts"),
+    serverApiGet<ContactImportsResponse>("/api/v1/contact-imports"),
+  ]);
   const contacts = response?.data ?? [];
+  const imports = importsResponse?.data ?? [];
+  const currentRole = user.active_organization.role as OrganizationRole;
+  const canImport = currentRole === "owner" || currentRole === "admin" || currentRole === "marketing";
   const activeContacts = contacts.filter((contact) => contact.status === "active").length;
   const teams = new Set(contacts.map((contact) => contact.team_name)).size;
   const taggedContacts = contacts.filter((contact) => contact.tags.length > 0).length;
@@ -44,9 +53,11 @@ export default async function ContactsPage() {
           <div>
             <p className="eyebrow">BASE DE CONTATOS</p>
             <h1>Contatos</h1>
-            <p>Veja a base demo segmentada por time, status e tags antes do fluxo completo de importação CSV.</p>
+            <p>Veja a base demo segmentada por time, status e tags. Use a importação demo para alimentar a operação sem sair do workspace.</p>
           </div>
         </header>
+
+        <ContactImportPanel canImport={canImport} imports={imports} />
 
         <section className="campaign-stats" aria-label="Resumo de contatos">
           <article><ContactRound aria-hidden="true" size={20} /><span>Total</span><b>{contacts.length}</b></article>

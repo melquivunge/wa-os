@@ -5,6 +5,7 @@ namespace Tests\Feature\Api\V1;
 use App\Enums\OrganizationRole;
 use App\Models\Audience;
 use App\Models\Contact;
+use App\Models\ContactImport;
 use App\Models\MessageTemplate;
 use App\Models\Organization;
 use App\Models\User;
@@ -119,6 +120,113 @@ class CrmFoundationTest extends TestCase
             ->assertJsonPath('data.0.name', 'Oferta VIP')
             ->assertJsonPath('data.0.status', 'approved')
             ->assertJsonMissing(['name' => 'Foreign template']);
+    }
+
+    public function test_marketing_can_import_contacts_from_demo_csv(): void
+    {
+        [$organization, $user] = $this->membership(OrganizationRole::Marketing);
+
+        $csv = implode("\n", [
+            'name,phone,email,status,tags',
+            'Nova Cliente,+5511999990101,NOVA@EXAMPLE.TEST,active,VIP|Julho',
+            ',+5511999990102,semnome@example.test,active,Erro',
+            'Cliente Sem Email,+5511999990103,,inactive,Retenção',
+        ]);
+
+        $this->actingAs($user)->withHeader('X-Organization-ID', $organization->id)
+            ->postJson('/api/v1/contact-imports', [
+                'source_name' => 'Planilha julho',
+                'team_name' => 'Growth',
+                'csv_text' => $csv,
+            ])
+            ->assertCreated()
+            ->assertJsonPath('data.source_name', 'Planilha julho')
+            ->assertJsonPath('data.team_name', 'Growth')
+            ->assertJsonPath('data.total_rows', 3)
+            ->assertJsonPath('data.accepted_rows', 2)
+            ->assertJsonPath('data.failed_rows', 1)
+            ->assertJsonPath('data.failure_samples.0.line', 3);
+
+        $this->assertDatabaseHas('contacts', [
+            'organization_id' => $organization->id,
+            'phone' => '+5511999990101',
+            'email' => 'nova@example.test',
+            'team_name' => 'Growth',
+            'status' => 'active',
+        ]);
+        $this->assertDatabaseHas('contacts', [
+            'organization_id' => $organization->id,
+            'phone' => '+5511999990103',
+            'team_name' => 'Growth',
+            'status' => 'inactive',
+        ]);
+        $this->assertDatabaseHas('contact_imports', [
+            'organization_id' => $organization->id,
+            'source_name' => 'Planilha julho',
+            'accepted_rows' => 2,
+            'failed_rows' => 1,
+        ]);
+    }
+
+    public function test_analyst_cannot_import_contacts(): void
+    {
+        [$organization, $user] = $this->membership(OrganizationRole::Analyst);
+
+        $this->actingAs($user)->withHeader('X-Organization-ID', $organization->id)
+            ->postJson('/api/v1/contact-imports', [
+                'source_name' => 'Blocked',
+                'team_name' => 'CRM',
+                'csv_text' => "name,phone\nSem Permissão,+5511999990201",
+            ])
+            ->assertForbidden();
+
+        $this->assertDatabaseMissing('contact_imports', ['source_name' => 'Blocked']);
+    }
+
+    public function test_contact_import_rejects_csv_without_contact_rows(): void
+    {
+        [$organization, $user] = $this->membership(OrganizationRole::Marketing);
+
+        $this->actingAs($user)->withHeader('X-Organization-ID', $organization->id)
+            ->postJson('/api/v1/contact-imports', [
+                'source_name' => 'Empty',
+                'team_name' => 'CRM',
+                'csv_text' => 'name,phone,email',
+            ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('csv_text');
+
+        $this->assertDatabaseMissing('contact_imports', ['source_name' => 'Empty']);
+    }
+
+    public function test_contact_imports_are_tenant_scoped(): void
+    {
+        [$organization, $user] = $this->membership(OrganizationRole::Analyst);
+        $foreign = Organization::factory()->create();
+
+        ContactImport::create([
+            'organization_id' => $organization->id,
+            'source_name' => 'Owned import',
+            'team_name' => 'CRM',
+            'total_rows' => 1,
+            'accepted_rows' => 1,
+            'processed_at' => now(),
+        ]);
+        ContactImport::create([
+            'organization_id' => $foreign->id,
+            'source_name' => 'Foreign import',
+            'team_name' => 'CRM',
+            'total_rows' => 1,
+            'accepted_rows' => 1,
+            'processed_at' => now(),
+        ]);
+
+        $this->actingAs($user)->withHeader('X-Organization-ID', $organization->id)
+            ->getJson('/api/v1/contact-imports')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.source_name', 'Owned import')
+            ->assertJsonMissing(['source_name' => 'Foreign import']);
     }
 
     /** @return array{Organization, User} */
