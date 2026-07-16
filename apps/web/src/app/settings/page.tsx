@@ -1,37 +1,25 @@
-import { CheckCircle2, Clock3, KeyRound, LockKeyhole, PlugZap, ShieldCheck, UsersRound } from "lucide-react";
+import { CheckCircle2, Clock3, KeyRound, LockKeyhole, PlugZap, ShieldCheck } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
+import { MemberManagement } from "@/app/settings/member-management";
 import { requireAuthenticatedUser } from "@/lib/server-auth";
 import { serverApiGet } from "@/lib/server-api";
+import type { OrganizationMember, OrganizationRole } from "@/lib/api-client";
 
-type Member = {
-  id: string;
-  name: string;
-  email: string;
-  role: "owner" | "admin" | "marketing" | "analyst";
-};
+type MembersResponse = { data: OrganizationMember[] };
 
-type MembersResponse = { data: Member[] };
-
-const roleLabels: Record<Member["role"], string> = {
+const roleLabels: Record<OrganizationRole, string> = {
   owner: "Owner",
   admin: "Admin",
   marketing: "Marketing",
   analyst: "Analyst",
 };
 
-const roleDescriptions: Record<Member["role"], string> = {
-  owner: "Controle total da organização e integrações.",
-  admin: "Gerencia membros, campanhas e dados de marketing.",
-  marketing: "Cria campanhas e acompanha resultados.",
-  analyst: "Acesso somente leitura a campanhas e analytics.",
-};
-
 export default async function SettingsPage() {
   const user = await requireAuthenticatedUser();
   const membersResponse = await serverApiGet<MembersResponse>(`/api/v1/organizations/${user.active_organization.id}/members`);
   const members = membersResponse?.data ?? [];
-  const ownerCount = members.filter((member) => member.role === "owner").length;
-  const writableMembers = members.filter((member) => member.role === "owner" || member.role === "admin" || member.role === "marketing").length;
+  const currentRole = user.active_organization.role as OrganizationRole;
+  const canManageMembers = currentRole === "owner" || currentRole === "admin";
 
   return (
     <AppShell activePath="/settings">
@@ -42,7 +30,7 @@ export default async function SettingsPage() {
             <h1>{user.active_organization.name}</h1>
             <p>Gerencie o contexto da organização, acesso dos membros e o estágio da integração WhatsApp.</p>
           </div>
-          <span className="settings-role-pill"><ShieldCheck aria-hidden="true" size={17} /> {roleLabels[user.active_organization.role as Member["role"]] ?? user.active_organization.role}</span>
+          <span className="settings-role-pill"><ShieldCheck aria-hidden="true" size={17} /> {roleLabels[currentRole] ?? user.active_organization.role}</span>
         </header>
 
         <section className="settings-grid">
@@ -58,7 +46,7 @@ export default async function SettingsPage() {
               <div><dt>Nome</dt><dd>{user.active_organization.name}</dd></div>
               <div><dt>Slug</dt><dd>{user.active_organization.slug}</dd></div>
               <div><dt>Timezone</dt><dd>{user.active_organization.timezone}</dd></div>
-              <div><dt>Seu acesso</dt><dd>{roleLabels[user.active_organization.role as Member["role"]] ?? user.active_organization.role}</dd></div>
+              <div><dt>Seu acesso</dt><dd>{roleLabels[currentRole] ?? user.active_organization.role}</dd></div>
             </dl>
           </article>
 
@@ -77,28 +65,12 @@ export default async function SettingsPage() {
             </div>
           </article>
 
-          <article className="settings-card settings-members-card">
-            <div className="settings-card-title">
-              <span><UsersRound aria-hidden="true" size={20} /></span>
-              <div>
-                <h2>Membros e permissões</h2>
-                <p>{members.length} membros · {ownerCount} owner · {writableMembers} com escrita em marketing</p>
-              </div>
-            </div>
-            <div className="member-list">
-              {members.map((member) => (
-                <div className="member-row" key={member.id}>
-                  <span className="member-avatar">{member.name.slice(0, 1).toUpperCase()}</span>
-                  <div>
-                    <b>{member.name}</b>
-                    <small>{member.email}</small>
-                  </div>
-                  <strong className={`member-role role-${member.role}`}>{roleLabels[member.role]}</strong>
-                  <p>{roleDescriptions[member.role]}</p>
-                </div>
-              ))}
-            </div>
-          </article>
+          <MemberManagement
+            canManageMembers={canManageMembers}
+            currentMemberRole={currentRole}
+            members={members}
+            organizationId={user.active_organization.id}
+          />
 
           <article className="settings-card security-card">
             <LockKeyhole aria-hidden="true" size={22} />
