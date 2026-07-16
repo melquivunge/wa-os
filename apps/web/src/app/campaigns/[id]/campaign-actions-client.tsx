@@ -1,6 +1,6 @@
 "use client";
 
-import { ClipboardCheck, Pause, Play, Rocket, XCircle } from "lucide-react";
+import { AlertCircle, CheckCircle2, ClipboardCheck, Pause, Play, Rocket, XCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { ApiError, campaignApi } from "@/lib/api-client";
@@ -19,19 +19,32 @@ const actionLabels = {
   cancel: "Cancelar",
 } as const;
 
+type ValidationState = {
+  ready: boolean;
+  errors: string[];
+  warnings: string[];
+};
+
 export function CampaignActionsClient({ campaignId, status }: CampaignActionsClientProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [runningAction, setRunningAction] = useState<keyof typeof actionLabels | null>(null);
   const [isValidating, setIsValidating] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [validation, setValidation] = useState<{ ready: boolean; text: string } | null>(null);
+  const [validation, setValidation] = useState<ValidationState | null>(null);
 
   const canStart = status === "draft" || status === "scheduled";
   const canPause = status === "scheduled" || status === "sending";
   const canResume = status === "paused";
   const canCancel = status === "draft" || status === "scheduled" || status === "sending" || status === "paused";
   const isBusy = isPending || runningAction !== null || isValidating;
+  const primaryHint = canStart
+    ? "Valide a campanha e rode uma simulação com dados demonstrativos."
+    : canPause
+      ? "Pausar mantém o histórico e permite retomar depois."
+      : canResume
+        ? "Retome para voltar ao fluxo operacional anterior."
+        : "A campanha está em estado final.";
 
   async function validateCampaign() {
     setError(null);
@@ -40,11 +53,10 @@ export function CampaignActionsClient({ campaignId, status }: CampaignActionsCli
 
     try {
       const response = await campaignApi.validate(campaignId);
-      const errors = Object.values(response.data.errors).flat();
-      const details = [...errors, ...response.data.warnings];
       setValidation({
         ready: response.data.ready,
-        text: response.data.ready ? "Campanha pronta para simular envio." : details.join(" "),
+        errors: Object.values(response.data.errors).flat(),
+        warnings: response.data.warnings,
       });
     } catch (caught) {
       setError(caught instanceof ApiError ? caught.message : "Não foi possível validar a campanha.");
@@ -80,6 +92,7 @@ export function CampaignActionsClient({ campaignId, status }: CampaignActionsCli
 
   return (
     <div className="detail-actions" aria-label="Ações da campanha">
+      <span>{primaryHint}</span>
       <div>
         {canStart ? (
           <>
@@ -112,7 +125,21 @@ export function CampaignActionsClient({ campaignId, status }: CampaignActionsCli
           </button>
         ) : null}
       </div>
-      {validation ? <p className={validation.ready ? "success" : ""} role="status">{validation.text}</p> : null}
+      {validation ? (
+        <div className={validation.ready ? "action-feedback success" : "action-feedback"} role="status">
+          {validation.ready ? <CheckCircle2 aria-hidden="true" size={16} /> : <AlertCircle aria-hidden="true" size={16} />}
+          <div>
+            <b>{validation.ready ? "Pronta para simular" : "Revise antes de simular"}</b>
+            {validation.errors.length > 0 || validation.warnings.length > 0 ? (
+              <ul>
+                {[...validation.errors, ...validation.warnings].map((item) => <li key={item}>{item}</li>)}
+              </ul>
+            ) : (
+              <small>Audiência, template, agenda e volume foram validados.</small>
+            )}
+          </div>
+        </div>
+      ) : null}
       {error ? <p role="alert">{error}</p> : null}
     </div>
   );
