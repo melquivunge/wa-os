@@ -5,6 +5,7 @@ namespace Tests\Feature\Api\V1;
 use App\Enums\OrganizationRole;
 use App\Models\Audience;
 use App\Models\Campaign;
+use App\Models\CampaignRecipient;
 use App\Models\MessageTemplate;
 use App\Models\Organization;
 use App\Models\User;
@@ -203,6 +204,14 @@ class CampaignTest extends TestCase
             'started_at' => now()->subHours(2),
             'completed_at' => now()->subHour(),
         ]);
+        CampaignRecipient::create([
+            'organization_id' => $organization->id,
+            'campaign_id' => $campaign->id,
+            'recipient_name' => 'Ana Rodrigues',
+            'phone' => '+55 11 94002-1030',
+            'status' => 'read',
+            'last_event_at' => now()->subMinutes(20),
+        ]);
 
         $this->actingAs($user)->withHeader('X-Organization-ID', $organization->id)
             ->getJson("/api/v1/campaigns/{$campaign->id}")
@@ -212,6 +221,9 @@ class CampaignTest extends TestCase
             ->assertJsonPath('data.audience.contact_count', 750)
             ->assertJsonPath('data.message_template.id', $template->id)
             ->assertJsonPath('data.message_template.category', 'marketing')
+            ->assertJsonPath('data.recipients.0.name', 'Ana Rodrigues')
+            ->assertJsonPath('data.recipients.0.phone', '+55 ••••-1030')
+            ->assertJsonPath('data.recipients.0.status', 'read')
             ->assertJsonPath('data.timeline.0.label', 'Criada')
             ->assertJsonPath('data.timeline.3.state', 'done');
     }

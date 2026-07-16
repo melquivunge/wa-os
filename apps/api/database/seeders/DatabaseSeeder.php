@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Enums\OrganizationRole;
 use App\Models\Audience;
 use App\Models\Campaign;
+use App\Models\CampaignRecipient;
 use App\Models\Contact;
 use App\Models\MessageTemplate;
 use App\Models\Organization;
@@ -163,13 +164,45 @@ class DatabaseSeeder extends Seeder
             $template = $templatesByName->get($campaign['message_template_name']);
             unset($campaign['message_template_name']);
 
-            Campaign::updateOrCreate(
+            $savedCampaign = Campaign::updateOrCreate(
                 ['organization_id' => $organization->id, 'name' => $campaign['name']],
                 [
                     'channel' => 'whatsapp',
                     'audience_id' => $audience?->id,
                     'message_template_id' => $template?->id,
                     ...$campaign,
+                ],
+            );
+
+            if ($savedCampaign->started_at !== null) {
+                $this->seedRecipientSample($organization, $savedCampaign);
+            }
+        }
+    }
+
+    private function seedRecipientSample(Organization $organization, Campaign $campaign): void
+    {
+        $contacts = Contact::query()
+            ->whereBelongsTo($organization)
+            ->where('team_name', $campaign->team_name)
+            ->orderBy('name')
+            ->get();
+        $statuses = ['read', 'read', 'delivered', 'delivered', 'failed', 'read', 'delivered', 'read'];
+
+        foreach ($statuses as $index => $status) {
+            $contact = $contacts->get($index);
+            CampaignRecipient::updateOrCreate(
+                ['campaign_id' => $campaign->id, 'phone' => $contact?->phone ?? sprintf('+55 11 9%04d-%04d', 7000 + $index, 2000 + $index)],
+                [
+                    'organization_id' => $organization->id,
+                    'contact_id' => $contact?->id,
+                    'recipient_name' => $contact?->name ?? sprintf('%s #%02d', $campaign->audience_name, $index + 1),
+                    'status' => $status,
+                    'last_event_at' => match ($status) {
+                        'read' => $campaign->completed_at ?? $campaign->started_at?->copy()->addMinutes(18),
+                        'failed' => $campaign->started_at?->copy()->addMinutes(6),
+                        default => $campaign->started_at?->copy()->addMinutes(4),
+                    },
                 ],
             );
         }
