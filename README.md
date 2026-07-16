@@ -30,11 +30,12 @@ Do not commit directly to `dev`, `stage`, or `main`.
 ## Getting started
 
 ```bash
-make infra-up
-make setup
-make api
-make web
+docker compose up --build
 ```
+
+This starts PostgreSQL, Redis, the Laravel API, and the Next.js web app together.
+Open the app at `http://localhost:3000`.
+Use `docker compose down` to stop the stack.
 
 The API and web application contain their own environment documentation.
 
