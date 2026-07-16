@@ -144,6 +144,15 @@ export type MessageTemplate = {
   last_used_at: string | null;
 };
 
+export type TemplateSyncResult = {
+  created: number;
+  updated: number;
+  approved: number;
+  rejected: number;
+  synced_at: string;
+  templates: MessageTemplate[];
+};
+
 export type OrganizationRole = "owner" | "admin" | "marketing" | "analyst";
 
 export type OrganizationMember = {
@@ -215,6 +224,16 @@ export const audienceApi = {
     return request<{ data: Audience }>("/api/v1/audiences", {
       method: "POST",
       body: JSON.stringify(input),
+    });
+  },
+};
+
+export const templateApi = {
+  async sync() {
+    await prepareCookieSession();
+    return request<{ data: TemplateSyncResult }>("/api/v1/templates/sync", {
+      method: "POST",
+      body: JSON.stringify({}),
     });
   },
 };
