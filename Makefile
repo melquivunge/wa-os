@@ -13,7 +13,7 @@ infra-down:
 	docker compose down
 
 dev:
-	@echo "Run 'make api' and 'make web' in separate terminals."
+	docker compose up --build
 
 api:
 	php apps/api/artisan serve
