@@ -37,6 +37,8 @@ Route::prefix('v1')->group(function (): void {
             Route::get('/campaigns', [CampaignController::class, 'index'])->name('api.v1.campaigns.index');
             Route::post('/campaigns', [CampaignController::class, 'store'])->name('api.v1.campaigns.store');
             Route::get('/campaigns/{campaign}', [CampaignController::class, 'show'])->name('api.v1.campaigns.show');
+            Route::post('/campaigns/{campaign}/validate', [CampaignController::class, 'validateCampaign'])->name('api.v1.campaigns.validate');
+            Route::post('/campaigns/{campaign}/start', [CampaignController::class, 'start'])->name('api.v1.campaigns.start');
             Route::post('/campaigns/{campaign}/pause', [CampaignController::class, 'pause'])->name('api.v1.campaigns.pause');
             Route::post('/campaigns/{campaign}/resume', [CampaignController::class, 'resume'])->name('api.v1.campaigns.resume');
             Route::post('/campaigns/{campaign}/cancel', [CampaignController::class, 'cancel'])->name('api.v1.campaigns.cancel');
