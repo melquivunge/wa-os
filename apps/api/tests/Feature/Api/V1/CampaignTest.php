@@ -167,6 +167,54 @@ class CampaignTest extends TestCase
             ->assertJsonPath('data.teams.0.name', 'CRM');
     }
 
+    public function test_analytics_returns_team_and_campaign_performance(): void
+    {
+        [$organization, $user] = $this->membership(OrganizationRole::Analyst);
+        Campaign::create([
+            'organization_id' => $organization->id,
+            'name' => 'CRM promo',
+            'audience_name' => 'Active customers',
+            'status' => 'completed',
+            'message_count' => 1000,
+            'delivered_count' => 900,
+            'read_count' => 630,
+            'failed_count' => 100,
+            'team_name' => 'CRM',
+            'spend_amount' => 30000,
+        ]);
+        Campaign::create([
+            'organization_id' => $organization->id,
+            'name' => 'Growth welcome',
+            'audience_name' => 'New customers',
+            'status' => 'completed',
+            'message_count' => 500,
+            'delivered_count' => 450,
+            'read_count' => 315,
+            'failed_count' => 50,
+            'team_name' => 'Growth',
+            'spend_amount' => 15000,
+        ]);
+        Campaign::create([
+            'organization_id' => Organization::factory()->create()->id,
+            'name' => 'Foreign analytics',
+            'audience_name' => 'Hidden',
+            'message_count' => 9999,
+            'team_name' => 'Foreign',
+        ]);
+
+        $this->actingAs($user)->withHeader('X-Organization-ID', $organization->id)
+            ->getJson('/api/v1/campaigns/analytics')
+            ->assertOk()
+            ->assertJsonPath('data.totals.messages', 1500)
+            ->assertJsonPath('data.totals.delivery_rate', 90)
+            ->assertJsonPath('data.totals.read_rate', 70)
+            ->assertJsonPath('data.totals.failure_rate', 10)
+            ->assertJsonPath('data.teams.0.name', 'CRM')
+            ->assertJsonPath('data.teams.0.share', 67)
+            ->assertJsonPath('data.campaigns.0.name', 'CRM promo')
+            ->assertJsonMissing(['name' => 'Foreign analytics']);
+    }
+
     public function test_show_returns_campaign_detail_with_resources_and_timeline(): void
     {
         [$organization, $user] = $this->membership(OrganizationRole::Analyst);
