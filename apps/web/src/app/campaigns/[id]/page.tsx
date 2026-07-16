@@ -8,6 +8,7 @@ import {
   MessageSquareText,
   ReceiptText,
   Smartphone,
+  TrendingUp,
   UsersRound,
 } from "lucide-react";
 import Link from "next/link";
@@ -78,6 +79,44 @@ const recipientStatusLabels: Record<CampaignDetail["recipients"][number]["status
   failed: "Falhou",
 };
 
+const nextStepByStatus: Record<CampaignDetail["status"], { title: string; text: string; tone: "ready" | "active" | "done" | "danger" }> = {
+  draft: {
+    title: "Validar e simular",
+    text: "A campanha ainda está em rascunho. Valide audiência e template antes de iniciar a simulação.",
+    tone: "ready",
+  },
+  scheduled: {
+    title: "Pronta para operação",
+    text: "Tudo indica que a campanha pode ser simulada ou pausada antes do horário planejado.",
+    tone: "ready",
+  },
+  sending: {
+    title: "Envio em andamento",
+    text: "Acompanhe entrega e falhas. Se notar risco operacional, pause ou cancele.",
+    tone: "active",
+  },
+  paused: {
+    title: "Operação pausada",
+    text: "Revise o motivo da pausa e retome quando o time estiver pronto.",
+    tone: "active",
+  },
+  completed: {
+    title: "Concluída",
+    text: "Use a amostra de destinatários e taxas para analisar o resultado do disparo.",
+    tone: "done",
+  },
+  failed: {
+    title: "Falhou",
+    text: "Revise template, audiência e agenda antes de tentar uma nova campanha.",
+    tone: "danger",
+  },
+  canceled: {
+    title: "Cancelada",
+    text: "Campanha encerrada manualmente. O histórico permanece disponível para auditoria.",
+    tone: "danger",
+  },
+};
+
 function formatDate(value: string | null) {
   if (!value) return "Pendente";
 
@@ -102,6 +141,14 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
   const deliveryRate = campaign.message_count > 0 ? Math.round((campaign.delivered_count / campaign.message_count) * 100) : 0;
   const readRate = campaign.delivered_count > 0 ? Math.round((campaign.read_count / campaign.delivered_count) * 100) : 0;
   const failureRate = campaign.message_count > 0 ? Math.round((campaign.failed_count / campaign.message_count) * 100) : 0;
+  const nextStep = nextStepByStatus[campaign.status];
+  const unresolvedMessages = Math.max(0, campaign.message_count - campaign.delivered_count - campaign.failed_count);
+  const spendPerMessage = campaign.message_count > 0 ? campaign.spend_amount / campaign.message_count : 0;
+  const templatePreview = campaign.message_template?.body
+    ?.replace(/\{\{\s*nome\s*\}\}/gi, "Marina")
+    .replace(/\{\{\s*cupom\s*\}\}/gi, "WA20")
+    .replace(/\{\{\s*([^}\s]+)\s*\}\}/g, "valor demo")
+    ?? "Campanha criada antes da seleção de template.";
 
   return (
     <AppShell activePath="/campaigns">
@@ -118,6 +165,28 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
             <CampaignActionsClient campaignId={campaign.id} status={campaign.status} />
           </div>
         </header>
+
+        <section className={`operations-console tone-${nextStep.tone}`} aria-label="Console operacional da campanha">
+          <div className="operations-console-main">
+            <span><Megaphone aria-hidden="true" size={18} /> Próximo passo</span>
+            <h2>{nextStep.title}</h2>
+            <p>{nextStep.text}</p>
+          </div>
+          <dl>
+            <div>
+              <dt>Fila pendente</dt>
+              <dd>{numberFormatter.format(unresolvedMessages)}</dd>
+            </div>
+            <div>
+              <dt>Custo por msg.</dt>
+              <dd>{currencyFormatter.format(spendPerMessage)}</dd>
+            </div>
+            <div>
+              <dt>Último marco</dt>
+              <dd>{formatDate(campaign.completed_at ?? campaign.started_at ?? campaign.scheduled_at)}</dd>
+            </div>
+          </dl>
+        </section>
 
         <section className="campaign-stats" aria-label="Resumo da campanha">
           <article><MessageSquareText aria-hidden="true" size={20} /><span>Mensagens</span><b>{numberFormatter.format(campaign.message_count)}</b></article>
@@ -163,6 +232,27 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
                 <i className="danger"><span style={{ width: `${failureRate}%` }} /></i>
               </div>
             </dl>
+          </article>
+
+          <article className="campaign-detail-card message-preview-card">
+            <div className="resource-detail-title">
+              <span className="resource-icon"><TrendingUp aria-hidden="true" size={18} /></span>
+              <div>
+                <h2>Leitura operacional</h2>
+                <p>O que o time precisa observar nesta campanha</p>
+              </div>
+            </div>
+            <div className="operations-insights">
+              <div>
+                <b>{readRate >= 75 ? "Boa tração" : readRate > 0 ? "Leitura em formação" : "Aguardando leitura"}</b>
+                <span>{readRate}% de leitura sobre entregues</span>
+              </div>
+              <div>
+                <b>{failureRate <= 3 ? "Falha controlada" : "Atenção em falhas"}</b>
+                <span>{failureRate}% de falhas no volume total</span>
+              </div>
+            </div>
+            <blockquote>{templatePreview}</blockquote>
           </article>
 
           <article className="campaign-detail-card resource-detail-card">
