@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
     'organization_id',
@@ -42,6 +43,11 @@ class Campaign extends Model
     public function messageTemplate(): BelongsTo
     {
         return $this->belongsTo(MessageTemplate::class);
+    }
+
+    public function recipients(): HasMany
+    {
+        return $this->hasMany(CampaignRecipient::class);
     }
 
     protected function casts(): array
