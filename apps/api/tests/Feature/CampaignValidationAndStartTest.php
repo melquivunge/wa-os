@@ -39,14 +39,18 @@ class CampaignValidationAndStartTest extends TestCase
         $this->withHeader('X-Organization-ID', $organization->id)
             ->postJson("/api/v1/campaigns/{$campaign->id}/start")
             ->assertOk()
-            ->assertJsonPath('data.status', 'sending')
+            ->assertJsonPath('data.status', 'completed')
             ->assertJsonPath('data.timeline.2.state', 'done');
 
         $this->assertDatabaseHas('campaigns', [
             'id' => $campaign->id,
-            'status' => 'sending',
+            'status' => 'completed',
         ]);
-        $this->assertNotNull($campaign->refresh()->started_at);
+        $campaign->refresh();
+        $this->assertNotNull($campaign->started_at);
+        $this->assertNotNull($campaign->completed_at);
+        $this->assertSame($campaign->message_count, $campaign->delivered_count + $campaign->failed_count);
+        $this->assertGreaterThan(0, $campaign->read_count);
     }
 
     public function test_start_rejects_campaign_with_unapproved_template(): void
