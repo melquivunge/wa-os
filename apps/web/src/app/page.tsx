@@ -29,10 +29,10 @@ import { serverApiGet } from "@/lib/server-api";
 const navItems = [
   { label: "Visão geral", icon: LayoutDashboard, active: true, href: "/" },
   { label: "Campanhas", icon: Megaphone, href: "/campaigns" },
-  { label: "Contatos", icon: ContactRound, href: "/" },
-  { label: "Audiências", icon: UsersRound, href: "/" },
-  { label: "Templates", icon: FileText, href: "/" },
-  { label: "Analytics", icon: BarChart3, href: "/" },
+  { label: "Contatos", icon: ContactRound, href: "/contacts" },
+  { label: "Audiências", icon: UsersRound, href: "/audiences" },
+  { label: "Templates", icon: FileText, href: "/templates" },
+  { label: "Analytics", icon: BarChart3, href: "/analytics" },
 ];
 
 type Campaign = {
