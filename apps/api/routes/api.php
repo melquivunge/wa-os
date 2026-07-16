@@ -50,6 +50,7 @@ Route::prefix('v1')->group(function (): void {
             Route::get('/audiences', [AudienceController::class, 'index'])->name('api.v1.audiences.index');
             Route::post('/audiences', [AudienceController::class, 'store'])->name('api.v1.audiences.store');
             Route::get('/templates', [MessageTemplateController::class, 'index'])->name('api.v1.templates.index');
+            Route::post('/templates/sync', [MessageTemplateController::class, 'sync'])->name('api.v1.templates.sync');
         });
     });
 });

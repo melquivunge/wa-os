@@ -240,6 +240,52 @@ class CrmFoundationTest extends TestCase
             ->assertJsonMissing(['name' => 'Foreign template']);
     }
 
+    public function test_marketing_can_sync_demo_templates(): void
+    {
+        [$organization, $user] = $this->membership(OrganizationRole::Marketing);
+
+        MessageTemplate::create([
+            'organization_id' => $organization->id,
+            'name' => 'Oferta relâmpago',
+            'team_name' => 'CRM',
+            'category' => 'marketing',
+            'status' => 'draft',
+            'language' => 'pt_BR',
+            'body' => 'old',
+        ]);
+
+        $this->actingAs($user)->withHeader('X-Organization-ID', $organization->id)
+            ->postJson('/api/v1/templates/sync')
+            ->assertOk()
+            ->assertJsonPath('data.created', 4)
+            ->assertJsonPath('data.updated', 1)
+            ->assertJsonPath('data.approved', 4)
+            ->assertJsonPath('data.rejected', 1);
+
+        $this->assertDatabaseHas('message_templates', [
+            'organization_id' => $organization->id,
+            'name' => 'Oferta relâmpago',
+            'status' => 'approved',
+            'body' => 'Olá {{nome}}, sua oferta de inverno está pronta. Use o cupom {{cupom}} até hoje.',
+        ]);
+        $this->assertDatabaseHas('message_templates', [
+            'organization_id' => $organization->id,
+            'name' => 'Cupom aniversário',
+            'status' => 'rejected',
+        ]);
+    }
+
+    public function test_analyst_cannot_sync_demo_templates(): void
+    {
+        [$organization, $user] = $this->membership(OrganizationRole::Analyst);
+
+        $this->actingAs($user)->withHeader('X-Organization-ID', $organization->id)
+            ->postJson('/api/v1/templates/sync')
+            ->assertForbidden();
+
+        $this->assertDatabaseMissing('message_templates', ['name' => 'Confirmação de pedido']);
+    }
+
     public function test_marketing_can_import_contacts_from_demo_csv(): void
     {
         [$organization, $user] = $this->membership(OrganizationRole::Marketing);
