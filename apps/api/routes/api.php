@@ -48,6 +48,7 @@ Route::prefix('v1')->group(function (): void {
             Route::get('/contact-imports', [ContactImportController::class, 'index'])->name('api.v1.contact-imports.index');
             Route::post('/contact-imports', [ContactImportController::class, 'store'])->name('api.v1.contact-imports.store');
             Route::get('/audiences', [AudienceController::class, 'index'])->name('api.v1.audiences.index');
+            Route::post('/audiences', [AudienceController::class, 'store'])->name('api.v1.audiences.store');
             Route::get('/templates', [MessageTemplateController::class, 'index'])->name('api.v1.templates.index');
         });
     });
