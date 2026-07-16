@@ -1,0 +1,53 @@
+.head { align-items: center; }
+.head > div { flex: 1; }
+
+.feedback { margin: -4px 0 16px; border-radius: 12px; padding: 11px 13px; font-size: 13px; font-weight: 850; }
+.success { border: 1px solid #cceede; background: #edf9f3; color: #23865f; }
+.error { border: 1px solid #ffd4c4; background: #fff6f0; color: #9a442d; }
+
+.readonlyNote { margin: -2px 0 16px; border: 1px dashed #d9d0eb; border-radius: 12px; background: #fbfaff; padding: 13px; color: #665f72; font-size: 14px; font-weight: 750; }
+
+.inviteForm { display: grid; grid-template-columns: minmax(150px, .9fr) minmax(210px, 1.1fr) minmax(140px, .65fr) auto; gap: 10px; align-items: end; margin-bottom: 16px; border: 1px solid #e9e3f4; border-radius: 15px; background: #fbfaff; padding: 14px; }
+.inviteForm label { display: grid; gap: 7px; color: var(--ink); font-size: 12px; font-weight: 900; }
+.inviteForm input, .inviteForm select, .roleSelect { width: 100%; min-height: 42px; border: 1px solid #ded7ec; border-radius: 11px; background: white; padding: 0 11px; color: var(--ink); outline: 0; }
+.inviteForm input[aria-invalid="true"], .inviteForm select[aria-invalid="true"] { border-color: #e47c3f; background: #fff8f3; }
+.inviteForm small { color: #b95727; font-size: 11px; font-weight: 850; }
+.inviteForm button { display: inline-flex; min-height: 42px; align-items: center; justify-content: center; gap: 8px; border: 0; border-radius: 11px; background: var(--violet); padding: 0 14px; color: white; font-size: 13px; font-weight: 950; cursor: pointer; box-shadow: 0 10px 22px #6c4df629; }
+.inviteForm button:disabled { opacity: .65; cursor: wait; }
+
+.list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.row { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr) minmax(126px, auto) auto; gap: 12px; align-items: center; border: 1px solid #e9e3f4; border-radius: 15px; background: #fbfaff; padding: 14px; }
+.avatar { display: grid; width: 42px; height: 42px; place-items: center; border-radius: 14px; background: linear-gradient(145deg, #6c4df6, #9b82ff); color: white; font-size: 14px; font-weight: 950; box-shadow: 0 12px 22px #6c4df624; }
+.row b, .row small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row b { color: var(--ink); font-size: 14px; font-weight: 950; }
+.row small { margin-top: 3px; color: #8d8699; font-size: 12px; font-weight: 800; }
+.row p { grid-column: 2 / -1; margin: -3px 0 0; color: #777386; font-size: 12px; font-weight: 750; }
+
+.pill, .roleSelect { border-radius: 999px; font-size: 12px; font-weight: 950; }
+.pill { padding: 7px 10px; }
+.roleSelect { min-height: 36px; }
+.roleSelect:disabled { opacity: .68; cursor: not-allowed; }
+
+.owner { background: #eee9ff; color: var(--violet); }
+.admin { background: #eaf2ff; color: #407cc1; }
+.marketing { background: #e8f8f0; color: #23865f; }
+.analyst { background: #fff1e4; color: #d87538; }
+
+.removeButton { display: grid; width: 38px; height: 38px; place-items: center; border: 1px solid #eadde4; border-radius: 12px; background: white; color: #b95768; cursor: pointer; }
+.removeButton:hover:not(:disabled) { border-color: #ffc9d4; background: #fff4f7; }
+.removeButton:disabled { opacity: .38; cursor: not-allowed; }
+
+@media (max-width: 900px) {
+  .inviteForm { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .inviteForm button { grid-column: 1 / -1; }
+  .list { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 560px) {
+  .inviteForm { grid-template-columns: 1fr; }
+  .row { grid-template-columns: auto minmax(0, 1fr); }
+  .pill, .roleSelect { grid-column: 2; justify-self: start; }
+  .roleSelect { width: min(180px, 100%); }
+  .removeButton { grid-column: 2; justify-self: start; }
+  .row p { grid-column: 1 / -1; margin-top: 0; }
+}
