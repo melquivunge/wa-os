@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Campaign;
+use App\Models\Contact;
 use Illuminate\Validation\ValidationException;
 
 class CampaignTransitionService
@@ -83,6 +84,8 @@ class CampaignTransitionService
             'failed_count' => $outcome['failed'],
         ])->save();
 
+        $this->syncRecipientSample($campaign->refresh());
+
         return $campaign->refresh();
     }
 
@@ -149,5 +152,47 @@ class CampaignTransitionService
             'read' => min($delivered, $read),
             'failed' => min($messages, $failed),
         ];
+    }
+
+    private function syncRecipientSample(Campaign $campaign): void
+    {
+        if ($campaign->recipients()->exists()) {
+            return;
+        }
+
+        $contacts = Contact::query()
+            ->where('organization_id', $campaign->organization_id)
+            ->where('team_name', $campaign->team_name)
+            ->orderBy('name')
+            ->take(6)
+            ->get();
+
+        $sampleSize = min(12, max(0, $campaign->message_count));
+        $readSlots = min($sampleSize, max(0, (int) round(($campaign->read_count / max(1, $campaign->message_count)) * $sampleSize)));
+        $failedSlots = min($sampleSize - $readSlots, max(0, (int) round(($campaign->failed_count / max(1, $campaign->message_count)) * $sampleSize)));
+        $deliveredSlots = max(0, $sampleSize - $readSlots - $failedSlots);
+        $statuses = [
+            ...array_fill(0, $readSlots, 'read'),
+            ...array_fill(0, $deliveredSlots, 'delivered'),
+            ...array_fill(0, $failedSlots, 'failed'),
+        ];
+
+        for ($index = 0; $index < $sampleSize; $index++) {
+            $contact = $contacts->get($index);
+            $status = $statuses[$index] ?? 'delivered';
+
+            $campaign->recipients()->create([
+                'organization_id' => $campaign->organization_id,
+                'contact_id' => $contact?->id,
+                'recipient_name' => $contact?->name ?? sprintf('%s #%02d', $campaign->audience_name, $index + 1),
+                'phone' => $contact?->phone ?? sprintf('+55 11 9%04d-%04d', 4000 + $index, 1000 + $index),
+                'status' => $status,
+                'last_event_at' => match ($status) {
+                    'read' => $campaign->completed_at,
+                    'failed' => $campaign->started_at?->copy()->addMinutes(7),
+                    default => $campaign->started_at?->copy()->addMinutes(5),
+                },
+            ]);
+        }
     }
 }

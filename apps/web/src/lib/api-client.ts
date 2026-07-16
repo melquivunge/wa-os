@@ -113,6 +113,13 @@ export type Campaign = {
     state: "done" | "current" | "pending";
     value: string | null;
   }>;
+  recipients: Array<{
+    id: string;
+    name: string;
+    phone: string;
+    status: "queued" | "delivered" | "read" | "failed";
+    last_event_at: string | null;
+  }>;
 };
 
 export type Audience = {

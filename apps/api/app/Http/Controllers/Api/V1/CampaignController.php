@@ -90,7 +90,7 @@ class CampaignController extends Controller
     {
         abort_unless($campaign->organization_id === $context->organization()->id, 404);
 
-        $campaign->load(['audience', 'messageTemplate']);
+        $campaign->load(['audience', 'messageTemplate', 'recipients']);
 
         return response()->json(['data' => $this->serialize($campaign)]);
     }
@@ -106,7 +106,7 @@ class CampaignController extends Controller
     {
         $this->authorizeCampaignOperation($campaign, $context);
 
-        return response()->json(['data' => $this->serialize($transitions->start($campaign)->load(['audience', 'messageTemplate']))]);
+        return response()->json(['data' => $this->serialize($transitions->start($campaign)->load(['audience', 'messageTemplate', 'recipients']))]);
     }
 
     public function pause(Campaign $campaign, TenantContext $context, CampaignTransitionService $transitions): JsonResponse
@@ -208,6 +208,19 @@ class CampaignController extends Controller
             'scheduled_at' => $campaign->scheduled_at?->toISOString(),
             'started_at' => $campaign->started_at?->toISOString(),
             'completed_at' => $campaign->completed_at?->toISOString(),
+            'recipients' => $campaign->relationLoaded('recipients')
+                ? $campaign->recipients
+                    ->sortByDesc(fn ($recipient) => $recipient->last_event_at?->getTimestamp() ?? $recipient->created_at->getTimestamp())
+                    ->take(12)
+                    ->values()
+                    ->map(fn ($recipient): array => [
+                        'id' => $recipient->id,
+                        'name' => $recipient->recipient_name,
+                        'phone' => $this->maskPhone($recipient->phone),
+                        'status' => $recipient->status,
+                        'last_event_at' => $recipient->last_event_at?->toISOString(),
+                    ])
+                : [],
             'timeline' => [
                 ['label' => 'Criada', 'state' => 'done', 'value' => $campaign->created_at?->toISOString()],
                 ['label' => 'Agendada', 'state' => $campaign->scheduled_at ? 'done' : 'pending', 'value' => $campaign->scheduled_at?->toISOString()],
@@ -215,6 +228,17 @@ class CampaignController extends Controller
                 ['label' => 'Concluída', 'state' => $campaign->completed_at ? 'done' : ($campaign->status === 'completed' ? 'current' : 'pending'), 'value' => $campaign->completed_at?->toISOString()],
             ],
         ];
+    }
+
+    private function maskPhone(string $phone): string
+    {
+        $digits = preg_replace('/\D+/', '', $phone) ?? '';
+
+        if (strlen($digits) < 6) {
+            return '••••';
+        }
+
+        return sprintf('+%s ••••-%s', substr($digits, 0, 2), substr($digits, -4));
     }
 
     private function authorizeCampaignOperation(Campaign $campaign, TenantContext $context): void
