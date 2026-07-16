@@ -23,12 +23,7 @@ class OrganizationMemberController extends Controller
         $this->assertActive($organization, $context);
 
         $members = $organization->memberships()->with('user:id,name,email')->orderBy('created_at')->get()
-            ->map(fn (OrganizationUser $membership): array => [
-                'id' => $membership->id,
-                'name' => $membership->user->name,
-                'email' => $membership->user->email,
-                'role' => $membership->role->value,
-            ]);
+            ->map(fn (OrganizationUser $membership): array => $this->serializeMember($membership));
 
         return response()->json(['data' => $members]);
     }
@@ -52,13 +47,17 @@ class OrganizationMemberController extends Controller
                 'password' => Hash::make(Str::random(64)),
             ]);
 
+            if ($organization->memberships()->where('user_id', $user->id)->exists()) {
+                throw ValidationException::withMessages(['email' => ['This user already belongs to the organization.']]);
+            }
+
             return $organization->memberships()->create([
                 'user_id' => $user->id,
                 'role' => $data['role'],
             ]);
         });
 
-        return response()->json(['data' => $membership->load('user:id,name,email')], 201);
+        return response()->json(['data' => $this->serializeMember($membership->load('user:id,name,email'))], 201);
     }
 
     public function update(Request $request, Organization $organization, OrganizationUser $member, TenantContext $context): JsonResponse
@@ -73,7 +72,7 @@ class OrganizationMemberController extends Controller
             $locked->update(['role' => $data['role']]);
         });
 
-        return response()->json(['data' => $member->fresh()]);
+        return response()->json(['data' => $this->serializeMember($member->fresh()->load('user:id,name,email'))]);
     }
 
     public function destroy(Organization $organization, OrganizationUser $member, TenantContext $context): JsonResponse
@@ -117,5 +116,15 @@ class OrganizationMemberController extends Controller
         if ($ownerCount <= 1) {
             throw ValidationException::withMessages(['role' => ['An organization must always have at least one owner.']]);
         }
+    }
+
+    private function serializeMember(OrganizationUser $membership): array
+    {
+        return [
+            'id' => $membership->id,
+            'name' => $membership->user->name,
+            'email' => $membership->user->email,
+            'role' => $membership->role->value,
+        ];
     }
 }

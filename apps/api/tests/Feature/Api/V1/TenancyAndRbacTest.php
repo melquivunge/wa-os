@@ -90,9 +90,23 @@ class TenancyAndRbacTest extends TestCase
         $this->actingAs($admin)->withHeader('X-Organization-ID', $organization->id)
             ->postJson("/api/v1/organizations/{$organization->id}/members", [
                 'name' => 'New Analyst', 'email' => 'ANALYST@EXAMPLE.COM', 'role' => 'analyst',
-            ])->assertCreated();
+            ])->assertCreated()
+            ->assertJsonPath('data.email', 'analyst@example.com')
+            ->assertJsonPath('data.role', 'analyst');
         $this->patchJson("/api/v1/organizations/{$organization->id}/members/{$foreignMember->id}", ['role' => 'marketing'])
             ->assertNotFound();
+    }
+
+    public function test_member_invite_rejects_existing_member(): void
+    {
+        [$organization, $owner] = $this->membership(OrganizationRole::Owner);
+        [, $existing] = $this->membership(OrganizationRole::Analyst, $organization);
+
+        $this->actingAs($owner)->withHeader('X-Organization-ID', $organization->id)
+            ->postJson("/api/v1/organizations/{$organization->id}/members", [
+                'name' => 'Existing Member', 'email' => mb_strtoupper($existing->email), 'role' => 'marketing',
+            ])->assertUnprocessable()
+            ->assertJsonValidationErrors('email');
     }
 
     public function test_last_owner_cannot_be_demoted_or_removed(): void

@@ -144,6 +144,15 @@ export type MessageTemplate = {
   last_used_at: string | null;
 };
 
+export type OrganizationRole = "owner" | "admin" | "marketing" | "analyst";
+
+export type OrganizationMember = {
+  id: string;
+  name: string;
+  email: string;
+  role: OrganizationRole;
+};
+
 export const authApi = {
   async login(input: LoginInput) {
     await prepareCookieSession();
@@ -184,6 +193,31 @@ export const campaignApi = {
     return request<{ data: Campaign }>(`/api/v1/campaigns/${id}/${action}`, {
       method: "POST",
       body: JSON.stringify({}),
+    });
+  },
+};
+
+export const organizationMemberApi = {
+  async create(organizationId: string, input: { name: string; email: string; role: OrganizationRole }) {
+    await prepareCookieSession();
+    return request<{ data: OrganizationMember }>(`/api/v1/organizations/${organizationId}/members`, {
+      method: "POST",
+      body: JSON.stringify(input),
+    });
+  },
+
+  async updateRole(organizationId: string, memberId: string, role: OrganizationRole) {
+    await prepareCookieSession();
+    return request<{ data: OrganizationMember }>(`/api/v1/organizations/${organizationId}/members/${memberId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ role }),
+    });
+  },
+
+  async remove(organizationId: string, memberId: string) {
+    await prepareCookieSession();
+    return request<void>(`/api/v1/organizations/${organizationId}/members/${memberId}`, {
+      method: "DELETE",
     });
   },
 };
