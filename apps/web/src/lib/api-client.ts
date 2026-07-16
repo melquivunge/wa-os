@@ -153,6 +153,18 @@ export type OrganizationMember = {
   role: OrganizationRole;
 };
 
+export type ContactImport = {
+  id: string;
+  source_name: string;
+  team_name: string;
+  status: "processed" | "processed_with_errors" | string;
+  total_rows: number;
+  accepted_rows: number;
+  failed_rows: number;
+  failure_samples: Array<{ line: number; reason: string }>;
+  processed_at: string | null;
+};
+
 export const authApi = {
   async login(input: LoginInput) {
     await prepareCookieSession();
@@ -218,6 +230,16 @@ export const organizationMemberApi = {
     await prepareCookieSession();
     return request<void>(`/api/v1/organizations/${organizationId}/members/${memberId}`, {
       method: "DELETE",
+    });
+  },
+};
+
+export const contactImportApi = {
+  async create(input: { source_name: string; team_name: string; csv_text: string }) {
+    await prepareCookieSession();
+    return request<{ data: ContactImport }>("/api/v1/contact-imports", {
+      method: "POST",
+      body: JSON.stringify(input),
     });
   },
 };

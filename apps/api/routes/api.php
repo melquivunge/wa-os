@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\V1\AudienceController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\CampaignController;
 use App\Http\Controllers\Api\V1\ContactController;
+use App\Http\Controllers\Api\V1\ContactImportController;
 use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\MessageTemplateController;
@@ -44,6 +45,8 @@ Route::prefix('v1')->group(function (): void {
             Route::post('/campaigns/{campaign}/resume', [CampaignController::class, 'resume'])->name('api.v1.campaigns.resume');
             Route::post('/campaigns/{campaign}/cancel', [CampaignController::class, 'cancel'])->name('api.v1.campaigns.cancel');
             Route::get('/contacts', [ContactController::class, 'index'])->name('api.v1.contacts.index');
+            Route::get('/contact-imports', [ContactImportController::class, 'index'])->name('api.v1.contact-imports.index');
+            Route::post('/contact-imports', [ContactImportController::class, 'store'])->name('api.v1.contact-imports.store');
             Route::get('/audiences', [AudienceController::class, 'index'])->name('api.v1.audiences.index');
             Route::get('/templates', [MessageTemplateController::class, 'index'])->name('api.v1.templates.index');
         });
