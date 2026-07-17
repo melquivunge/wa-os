@@ -1,4 +1,5 @@
-import { CheckCircle2, Clock3, KeyRound, LockKeyhole, PlugZap, ShieldCheck } from "lucide-react";
+import { ArrowRight, CheckCircle2, Clock3, KeyRound, LockKeyhole, PlugZap, ShieldCheck } from "lucide-react";
+import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { MemberManagement } from "@/app/settings/member-management";
 import { requireAuthenticatedUser } from "@/lib/server-auth";
@@ -63,6 +64,7 @@ export default async function SettingsPage() {
               <div><Clock3 aria-hidden="true" size={18} /><span>Meta real</span><b>Próximo marco</b></div>
               <div><KeyRound aria-hidden="true" size={18} /><span>Credenciais</span><b>Não armazenadas</b></div>
             </div>
+            <Link className="panel-link settings-integration-link" href="/settings/integrations">Gerenciar contas e validar canal <ArrowRight size={15} /></Link>
           </article>
 
           <MemberManagement
