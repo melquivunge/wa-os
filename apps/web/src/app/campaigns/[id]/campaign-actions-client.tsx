@@ -3,7 +3,7 @@
 import { AlertCircle, CheckCircle2, ClipboardCheck, Pause, Play, Rocket, XCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { ApiError, campaignApi } from "@/lib/api-client";
+import { ApiError, campaignApi, deliveryApi } from "@/lib/api-client";
 
 type CampaignStatus = "draft" | "scheduled" | "sending" | "completed" | "paused" | "failed" | "canceled";
 
@@ -37,6 +37,7 @@ export function CampaignActionsClient({ campaignId, status }: CampaignActionsCli
   const canPause = status === "scheduled" || status === "sending";
   const canResume = status === "paused";
   const canCancel = status === "draft" || status === "scheduled" || status === "sending" || status === "paused";
+  const canQueue = status === "sending" || status === "completed";
   const isBusy = isPending || runningAction !== null || isValidating;
   const primaryHint = canStart
     ? "Valide a campanha e rode uma simulação com dados demonstrativos."
@@ -88,12 +89,24 @@ export function CampaignActionsClient({ campaignId, status }: CampaignActionsCli
     }
   }
 
-  if (!canStart && !canPause && !canResume && !canCancel) return null;
+  async function queueDelivery() {
+    setError(null);
+    setRunningAction(null);
+    try {
+      const response = await deliveryApi.dispatch(campaignId);
+      setValidation({ ready: true, errors: [], warnings: [`${response.data.queued} destinatários adicionados à fila · ${response.data.existing} já estavam protegidos por idempotência.`] });
+    } catch (caught) {
+      setError(caught instanceof ApiError ? caught.message : "Não foi possível preparar a fila de envio.");
+    }
+  }
+
+  if (!canStart && !canPause && !canResume && !canCancel && !canQueue) return null;
 
   return (
     <div className="detail-actions" aria-label="Ações da campanha">
       <span>{primaryHint}</span>
       <div>
+        {canQueue ? <button disabled={isBusy} onClick={() => void queueDelivery()} type="button"><Rocket aria-hidden="true" size={16} /> Preparar fila</button> : null}
         {canStart ? (
           <>
             <button disabled={isBusy} onClick={() => void validateCampaign()} type="button">
