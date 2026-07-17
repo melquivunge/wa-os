@@ -7,6 +7,7 @@ use App\Models\Organization;
 use App\Models\OrganizationUser;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
@@ -47,6 +48,27 @@ class WhatsAppAccountFoundationTest extends TestCase
         $this->withHeader('X-Organization-ID', $organization->id)
             ->postJson('/api/v1/whatsapp-accounts', ['name' => 'Sem permissão'])
             ->assertForbidden();
+    }
+
+    public function test_owner_can_validate_account_through_provider_contract(): void
+    {
+        [$organization, $user] = $this->member(OrganizationRole::Owner);
+        $account = $organization->whatsappAccounts()->create([
+            'name' => 'Conta Meta',
+            'phone_number_id' => 'phone-456',
+            'access_token' => 'secret-token',
+            'status' => 'ready_for_validation',
+        ]);
+        Http::fake(['graph.facebook.com/*' => Http::response(['id' => 'phone-456', 'display_phone_number' => '+55 11 99999-0000'], 200)]);
+        Sanctum::actingAs($user);
+
+        $this->withHeader('X-Organization-ID', $organization->id)
+            ->postJson("/api/v1/whatsapp-accounts/{$account->id}/validate")
+            ->assertOk()
+            ->assertJsonPath('data.ok', true)
+            ->assertJsonPath('data.status', 'connected');
+
+        $this->assertDatabaseHas('whatsapp_accounts', ['id' => $account->id, 'status' => 'connected']);
     }
 
     /** @return array{Organization, User} */
