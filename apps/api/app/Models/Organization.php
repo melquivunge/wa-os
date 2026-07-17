@@ -41,6 +41,11 @@ class Organization extends Model
         return $this->hasMany(MessageTemplate::class);
     }
 
+    public function whatsappAccounts(): HasMany
+    {
+        return $this->hasMany(WhatsAppAccount::class);
+    }
+
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'organization_users')
