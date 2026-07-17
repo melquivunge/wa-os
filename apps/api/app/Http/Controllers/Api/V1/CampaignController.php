@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Audience;
 use App\Models\Campaign;
 use App\Models\MessageTemplate;
+use App\Services\CampaignDispatchService;
 use App\Services\CampaignTransitionService;
 use App\Tenancy\TenantContext;
 use Illuminate\Http\JsonResponse;
@@ -113,6 +114,13 @@ class CampaignController extends Controller
         $this->authorizeCampaignOperation($campaign, $context);
 
         return response()->json(['data' => $this->serialize($transitions->start($campaign)->load(['audience', 'messageTemplate', 'recipients']))]);
+    }
+
+    public function dispatch(Campaign $campaign, TenantContext $context, CampaignDispatchService $dispatcher): JsonResponse
+    {
+        $this->authorizeCampaignOperation($campaign, $context);
+
+        return response()->json(['data' => $dispatcher->queue($campaign)]);
     }
 
     public function pause(Campaign $campaign, TenantContext $context, CampaignTransitionService $transitions): JsonResponse
