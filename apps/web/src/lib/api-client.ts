@@ -144,6 +144,18 @@ export type MessageTemplate = {
   last_used_at: string | null;
 };
 
+export type WhatsAppAccount = {
+  id: string;
+  name: string;
+  provider: string;
+  status: string;
+  business_account_id: string | null;
+  phone_number_id: string | null;
+  display_phone_number: string | null;
+  has_credentials: boolean;
+  last_validated_at: string | null;
+};
+
 export type TemplateSyncResult = {
   created: number;
   updated: number;
@@ -235,6 +247,24 @@ export const templateApi = {
       method: "POST",
       body: JSON.stringify({}),
     });
+  },
+};
+
+export const whatsappApi = {
+  async create(input: { name: string; business_account_id?: string; phone_number_id?: string; access_token?: string }) {
+    await prepareCookieSession();
+    return request<{ data: WhatsAppAccount }>("/api/v1/whatsapp-accounts", { method: "POST", body: JSON.stringify(input) });
+  },
+  async validate(id: string) {
+    await prepareCookieSession();
+    return request<{ data: WhatsAppAccount & { ok: boolean; message: string } }>(`/api/v1/whatsapp-accounts/${id}/validate`, { method: "POST", body: JSON.stringify({}) });
+  },
+};
+
+export const deliveryApi = {
+  async dispatch(id: string) {
+    await prepareCookieSession();
+    return request<{ data: { queued: number; existing: number } }>(`/api/v1/campaigns/${id}/dispatch`, { method: "POST", body: JSON.stringify({}) });
   },
 };
 
