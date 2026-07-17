@@ -29,10 +29,11 @@ const navItems = [
 
 type AppShellProps = {
   activePath: "/" | "/campaigns" | "/contacts" | "/audiences" | "/templates" | "/analytics" | "/settings";
+  hideMobileNav?: boolean;
   children: ReactNode;
 };
 
-export function AppShell({ activePath, children }: AppShellProps) {
+export function AppShell({ activePath, hideMobileNav = false, children }: AppShellProps) {
   return (
     <div className="app-shell">
       <a className="skip-link" href="#main-content">Pular para o conteúdo</a>
@@ -87,7 +88,7 @@ export function AppShell({ activePath, children }: AppShellProps) {
         {children}
       </main>
 
-      <nav className="bottom-nav" aria-label="Navegação mobile">
+      <nav className={hideMobileNav ? "bottom-nav hide-mobile" : "bottom-nav"} aria-label="Navegação mobile">
         {navItems.slice(0, 4).map((item) => (
           <Link className={item.href === activePath ? "active" : ""} href={item.href} key={item.label}>
             <item.icon aria-hidden="true" size={20} />

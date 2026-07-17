@@ -19,7 +19,7 @@ export default async function NewCampaignPage() {
   const templates = templatesResponse?.data ?? [];
 
   return (
-    <AppShell activePath="/campaigns">
+    <AppShell activePath="/campaigns" hideMobileNav>
       <div className="campaign-workspace">
         <header className="campaign-header">
           <div>
