@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Contracts\MessagingProvider;
 use App\Http\Controllers\Controller;
 use App\Models\WhatsAppAccount;
 use App\Tenancy\TenantContext;
@@ -39,6 +40,20 @@ class WhatsAppAccountController extends Controller
         ]);
 
         return response()->json(['data' => $this->serialize($account)], 201);
+    }
+
+    public function validateConnection(string $account, TenantContext $context, MessagingProvider $provider): JsonResponse
+    {
+        abort_unless($context->membership()->role->canManageOrganization(), 403);
+        $model = $context->organization()->whatsappAccounts()->findOrFail($account);
+        $result = $provider->validateConnection($model);
+        $model->forceFill([
+            'status' => $result['status'],
+            'last_validated_at' => now(),
+            'display_phone_number' => $result['details']['display_phone_number'] ?? $model->display_phone_number,
+        ])->save();
+
+        return response()->json(['data' => [...$this->serialize($model->refresh()), ...$result]]);
     }
 
     private function serialize(WhatsAppAccount $account): array

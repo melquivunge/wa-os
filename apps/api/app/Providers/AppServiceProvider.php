@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Contracts\MessagingProvider;
+use App\Services\MetaWhatsAppProvider;
 use App\Tenancy\TenantContext;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Support\ServiceProvider;
@@ -14,6 +16,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->scoped(TenantContext::class);
+        $this->app->bind(MessagingProvider::class, MetaWhatsAppProvider::class);
     }
 
     /**

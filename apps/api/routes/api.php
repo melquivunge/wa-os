@@ -54,6 +54,7 @@ Route::prefix('v1')->group(function (): void {
             Route::post('/templates/sync', [MessageTemplateController::class, 'sync'])->name('api.v1.templates.sync');
             Route::get('/whatsapp-accounts', [WhatsAppAccountController::class, 'index'])->name('api.v1.whatsapp-accounts.index');
             Route::post('/whatsapp-accounts', [WhatsAppAccountController::class, 'store'])->name('api.v1.whatsapp-accounts.store');
+            Route::post('/whatsapp-accounts/{account}/validate', [WhatsAppAccountController::class, 'validateConnection'])->name('api.v1.whatsapp-accounts.validate');
         });
     });
 });
