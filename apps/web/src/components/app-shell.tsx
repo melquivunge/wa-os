@@ -13,6 +13,7 @@ import {
   Search,
   Settings,
   Sparkles,
+  Smartphone,
   UsersRound,
 } from "lucide-react";
 import Link from "next/link";
@@ -25,6 +26,7 @@ const navItems = [
   { label: "Audiências", icon: UsersRound, href: "/audiences" },
   { label: "Templates", icon: FileText, href: "/templates" },
   { label: "Analytics", icon: BarChart3, href: "/analytics" },
+  { label: "Integrações", icon: Smartphone, href: "/settings/integrations" },
 ];
 
 type AppShellProps = {
