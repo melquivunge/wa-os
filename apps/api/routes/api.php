@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\V1\MessageTemplateController;
 use App\Http\Controllers\Api\V1\OrganizationController;
 use App\Http\Controllers\Api\V1\OrganizationMemberController;
 use App\Http\Controllers\Api\V1\PasswordResetController;
+use App\Http\Controllers\Api\V1\WhatsAppAccountController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function (): void {
@@ -51,6 +52,8 @@ Route::prefix('v1')->group(function (): void {
             Route::post('/audiences', [AudienceController::class, 'store'])->name('api.v1.audiences.store');
             Route::get('/templates', [MessageTemplateController::class, 'index'])->name('api.v1.templates.index');
             Route::post('/templates/sync', [MessageTemplateController::class, 'sync'])->name('api.v1.templates.sync');
+            Route::get('/whatsapp-accounts', [WhatsAppAccountController::class, 'index'])->name('api.v1.whatsapp-accounts.index');
+            Route::post('/whatsapp-accounts', [WhatsAppAccountController::class, 'store'])->name('api.v1.whatsapp-accounts.store');
         });
     });
 });
