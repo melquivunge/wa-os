@@ -4,6 +4,7 @@ return [
 
     'meta' => [
         'graph_url' => env('META_GRAPH_URL', 'https://graph.facebook.com/v23.0'),
+        'webhook_verify_token' => env('META_WEBHOOK_VERIFY_TOKEN', 'wa-os-demo-verify-token'),
     ],
 
     /*

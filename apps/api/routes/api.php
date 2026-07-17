@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\V1\ContactImportController;
 use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\MessageTemplateController;
+use App\Http\Controllers\Api\V1\MetaWebhookController;
 use App\Http\Controllers\Api\V1\OrganizationController;
 use App\Http\Controllers\Api\V1\OrganizationMemberController;
 use App\Http\Controllers\Api\V1\PasswordResetController;
@@ -16,6 +17,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function (): void {
     Route::get('/health', HealthController::class)->name('api.v1.health');
+    Route::get('/webhooks/meta', [MetaWebhookController::class, 'verify'])->name('api.v1.webhooks.meta.verify');
+    Route::post('/webhooks/meta', [MetaWebhookController::class, 'receive'])->name('api.v1.webhooks.meta.receive');
     Route::middleware('throttle:6,1')->group(function (): void {
         Route::post('/auth/login', [AuthController::class, 'login'])->name('api.v1.auth.login');
         Route::post('/auth/forgot-password', [PasswordResetController::class, 'request'])->name('api.v1.auth.password.request');
