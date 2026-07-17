@@ -2,7 +2,7 @@ import { CheckCircle2, FileText, Languages, ShieldAlert } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { requireAuthenticatedUser } from "@/lib/server-auth";
 import { serverApiGet } from "@/lib/server-api";
-import type { OrganizationRole } from "@/lib/api-client";
+import type { OrganizationRole, WhatsAppAccount } from "@/lib/api-client";
 import { TeamFilterList } from "../shared/team-filter-list";
 import { TemplateSyncPanel } from "./template-sync-panel";
 
@@ -34,6 +34,7 @@ export default async function TemplatesPage() {
   const user = await requireAuthenticatedUser();
 
   const response = await serverApiGet<TemplatesResponse>("/api/v1/templates");
+  const accountsResponse = await serverApiGet<{ data: WhatsAppAccount[] }>("/api/v1/whatsapp-accounts");
   const templates = response?.data ?? [];
   const currentRole = user.active_organization.role as OrganizationRole;
   const canSync = currentRole === "owner" || currentRole === "admin" || currentRole === "marketing";
@@ -52,7 +53,7 @@ export default async function TemplatesPage() {
           </div>
         </header>
 
-        <TemplateSyncPanel approved={approved} canSync={canSync} total={templates.length} />
+        <TemplateSyncPanel accounts={accountsResponse?.data ?? []} approved={approved} canSync={canSync} total={templates.length} />
 
         <section className="campaign-stats" aria-label="Resumo de templates">
           <article><FileText aria-hidden="true" size={20} /><span>Total</span><b>{templates.length}</b></article>

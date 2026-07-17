@@ -19,6 +19,7 @@ export default async function IntegrationsPage() {
           </div>
         </header>
         <IntegrationPanel accounts={response?.data ?? []} canManage={user.active_organization.role === "owner"} />
+        {user.active_organization.role !== "owner" ? <section className="integration-permission-card"><div><b>Cadastro protegido pelo Owner</b><p>As credenciais Meta alteram o canal de envio e só podem ser cadastradas pelo Owner da organização. Você ainda pode acompanhar o estado da conexão nesta tela.</p></div><span>Seu acesso: {user.active_organization.role === "admin" ? "Admin" : user.active_organization.role}</span></section> : null}
       </div>
     </AppShell>
   );

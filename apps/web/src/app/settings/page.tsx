@@ -31,7 +31,7 @@ export default async function SettingsPage() {
             <h1>{user.active_organization.name}</h1>
             <p>Gerencie o contexto da organização, acesso dos membros e o estágio da integração WhatsApp.</p>
           </div>
-          <span className="settings-role-pill"><ShieldCheck aria-hidden="true" size={17} /> {roleLabels[currentRole] ?? user.active_organization.role}</span>
+          <div className="settings-header-actions"><Link className="primary-action settings-open-integrations" href="/settings/integrations"><PlugZap aria-hidden="true" size={16} /> Abrir integrações</Link><span className="settings-role-pill"><ShieldCheck aria-hidden="true" size={17} /> {roleLabels[currentRole] ?? user.active_organization.role}</span></div>
         </header>
 
         <section className="settings-grid">
