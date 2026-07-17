@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable([
     'organization_id',
+    'provider_template_id',
     'name',
     'team_name',
     'category',

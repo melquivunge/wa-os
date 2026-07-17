@@ -52,6 +52,7 @@ Route::prefix('v1')->group(function (): void {
             Route::post('/audiences', [AudienceController::class, 'store'])->name('api.v1.audiences.store');
             Route::get('/templates', [MessageTemplateController::class, 'index'])->name('api.v1.templates.index');
             Route::post('/templates/sync', [MessageTemplateController::class, 'sync'])->name('api.v1.templates.sync');
+            Route::post('/templates/sync/{account}', [MessageTemplateController::class, 'syncFromMeta'])->name('api.v1.templates.sync.meta');
             Route::get('/whatsapp-accounts', [WhatsAppAccountController::class, 'index'])->name('api.v1.whatsapp-accounts.index');
             Route::post('/whatsapp-accounts', [WhatsAppAccountController::class, 'store'])->name('api.v1.whatsapp-accounts.store');
             Route::post('/whatsapp-accounts/{account}/validate', [WhatsAppAccountController::class, 'validateConnection'])->name('api.v1.whatsapp-accounts.validate');
