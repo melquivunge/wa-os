@@ -3,10 +3,11 @@
 import { RadioTower, RefreshCcw, ShieldCheck } from "lucide-react";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { ApiError, templateApi, type TemplateSyncResult } from "@/lib/api-client";
+import { ApiError, templateApi, type TemplateSyncResult, type WhatsAppAccount } from "@/lib/api-client";
 import styles from "./template-sync-panel.module.css";
 
 type TemplateSyncPanelProps = {
+  accounts: WhatsAppAccount[];
   approved: number;
   canSync: boolean;
   total: number;
@@ -23,17 +24,18 @@ function formatDate(value: string | null) {
   }).format(new Date(value));
 }
 
-export function TemplateSyncPanel({ approved, canSync, total }: TemplateSyncPanelProps) {
+export function TemplateSyncPanel({ accounts, approved, canSync, total }: TemplateSyncPanelProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [lastSync, setLastSync] = useState<TemplateSyncResult | null>(null);
+  const [accountId, setAccountId] = useState(accounts[0]?.id ?? "");
   const [feedback, setFeedback] = useState<{ tone: "success" | "error"; message: string } | null>(null);
 
   async function syncTemplates() {
     setFeedback(null);
 
     try {
-      const response = await templateApi.sync();
+      const response = await templateApi.sync(accountId || undefined);
       setLastSync(response.data);
       setFeedback({
         tone: "success",
@@ -54,23 +56,24 @@ export function TemplateSyncPanel({ approved, canSync, total }: TemplateSyncPane
         <div className={styles.head}>
           <div>
             <h2>Sincronização do provedor</h2>
-            <p>Atualize a biblioteca local com o catálogo determinístico do simulador. A integração real com a Meta fica para o próximo marco.</p>
+            <p>{accountId ? "Busque os templates publicados na conta Meta selecionada e atualize a biblioteca do workspace." : "Selecione uma conta WhatsApp para sincronizar templates reais da Meta."}</p>
           </div>
-          <span className={styles.badge}><RadioTower aria-hidden="true" size={15} /> Simulador ativo</span>
+          <span className={styles.badge}><RadioTower aria-hidden="true" size={15} /> Meta Graph API</span>
         </div>
 
         {feedback ? <p className={`${styles.feedback} ${feedback.tone === "success" ? styles.success : styles.error}`}>{feedback.message}</p> : null}
 
         <div className={styles.pipeline} aria-label="Etapas da sincronização">
-          <div className={styles.stage}><span>Catálogo</span><b>Provider demo</b></div>
+          <div className={styles.stage}><span>Catálogo</span><b>Meta Business</b></div>
           <div className={styles.stage}><span>Validação</span><b>Status normalizado</b></div>
           <div className={styles.stage}><span>Biblioteca</span><b>Pronto para campanha</b></div>
         </div>
 
         {canSync ? (
           <div className={styles.actions}>
+            <label className={styles.accountSelect}>Conta WhatsApp<select value={accountId} onChange={(event) => setAccountId(event.target.value)}><option value="">Selecione uma conta</option>{accounts.map((account) => <option key={account.id} value={account.id}>{account.name} · {account.status}</option>)}</select></label>
             <p>Sincronização idempotente: repetir atualiza o estado local.</p>
-            <button disabled={isPending} onClick={() => void syncTemplates()} type="button">
+            <button disabled={isPending || !accountId} onClick={() => void syncTemplates()} type="button">
               <RefreshCcw aria-hidden="true" size={17} /> Sincronizar templates
             </button>
           </div>

@@ -241,9 +241,9 @@ export const audienceApi = {
 };
 
 export const templateApi = {
-  async sync() {
+  async sync(accountId?: string) {
     await prepareCookieSession();
-    return request<{ data: TemplateSyncResult }>("/api/v1/templates/sync", {
+    return request<{ data: TemplateSyncResult }>(accountId ? `/api/v1/templates/sync/${accountId}` : "/api/v1/templates/sync", {
       method: "POST",
       body: JSON.stringify({}),
     });
