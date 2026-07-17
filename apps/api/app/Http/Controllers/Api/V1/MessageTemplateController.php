@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Contracts\MessagingProvider;
 use App\Http\Controllers\Controller;
 use App\Models\MessageTemplate;
+use App\Models\WhatsAppAccount;
 use App\Tenancy\TenantContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -108,10 +110,54 @@ class MessageTemplateController extends Controller
         ]);
     }
 
+    public function syncFromMeta(WhatsAppAccount $account, TenantContext $context, MessagingProvider $provider): JsonResponse
+    {
+        abort_unless($context->membership()->role->canWriteMarketingData(), 403);
+
+        abort_unless($account->organization_id === $context->organization()->id, 404);
+
+        $result = $provider->listTemplates($account);
+        if (! $result['ok']) {
+            return response()->json(['message' => $result['message'], 'status' => $result['status']], 422);
+        }
+
+        $created = 0;
+        $updated = 0;
+        $templates = collect($result['templates'])->map(function (array $template) use ($context, &$created, &$updated): MessageTemplate {
+            $model = MessageTemplate::updateOrCreate(
+                [
+                    'organization_id' => $context->organization()->id,
+                    'provider_template_id' => $template['provider_template_id'],
+                ],
+                [
+                    ...$template,
+                    'team_name' => 'CRM',
+                    'last_used_at' => $template['status'] === 'approved' ? now() : null,
+                ],
+            );
+
+            $model->wasRecentlyCreated ? $created++ : $updated++;
+
+            return $model;
+        });
+
+        return response()->json([
+            'data' => [
+                'created' => $created,
+                'updated' => $updated,
+                'approved' => $templates->where('status', 'approved')->count(),
+                'rejected' => $templates->where('status', 'rejected')->count(),
+                'synced_at' => now()->toISOString(),
+                'templates' => $templates->map(fn (MessageTemplate $template): array => $this->serialize($template))->values(),
+            ],
+        ]);
+    }
+
     private function serialize(MessageTemplate $template): array
     {
         return [
             'id' => $template->id,
+            'provider_template_id' => $template->provider_template_id,
             'name' => $template->name,
             'team_name' => $template->team_name,
             'category' => $template->category,

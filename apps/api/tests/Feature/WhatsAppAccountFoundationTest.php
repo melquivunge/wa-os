@@ -71,6 +71,39 @@ class WhatsAppAccountFoundationTest extends TestCase
         $this->assertDatabaseHas('whatsapp_accounts', ['id' => $account->id, 'status' => 'connected']);
     }
 
+    public function test_marketing_member_can_sync_templates_from_meta_account(): void
+    {
+        [$organization, $user] = $this->member(OrganizationRole::Marketing);
+        $account = $organization->whatsappAccounts()->create([
+            'name' => 'Conta Meta',
+            'business_account_id' => 'business-456',
+            'access_token' => 'secret-token',
+            'status' => 'connected',
+        ]);
+        Http::fake(['graph.facebook.com/*' => Http::response(['data' => [[
+            'id' => 'meta-template-1',
+            'name' => 'boas_vindas',
+            'category' => 'MARKETING',
+            'status' => 'APPROVED',
+            'language' => 'pt_BR',
+            'components' => [['type' => 'BODY', 'text' => 'Olá {{1}}']],
+        ]]], 200)]);
+        Sanctum::actingAs($user);
+
+        $this->withHeader('X-Organization-ID', $organization->id)
+            ->postJson("/api/v1/templates/sync/{$account->id}")
+            ->assertOk()
+            ->assertJsonPath('data.created', 1)
+            ->assertJsonPath('data.templates.0.provider_template_id', 'meta-template-1')
+            ->assertJsonPath('data.templates.0.body', 'Olá {{1}}');
+
+        $this->assertDatabaseHas('message_templates', [
+            'organization_id' => $organization->id,
+            'provider_template_id' => 'meta-template-1',
+            'status' => 'approved',
+        ]);
+    }
+
     /** @return array{Organization, User} */
     private function member(OrganizationRole $role): array
     {
