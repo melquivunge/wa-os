@@ -417,6 +417,13 @@ a { color: inherit; text-decoration: none; }
 .integration-permission-card { display: flex; align-items: center; justify-content: space-between; gap: 18px; max-width: 1180px; margin: 18px auto 0; border: 1px solid #dcd5ef; border-radius: 16px; background: #f5f1ff; padding: 18px 20px; color: #5d46c8; }
 .integration-permission-card p { max-width: 760px; margin: 5px 0 0; color: #6f6780; font-size: 13px; font-weight: 700; line-height: 1.5; }
 .integration-permission-card > span { flex: 0 0 auto; border-radius: 999px; background: #e8e0ff; padding: 8px 11px; font-size: 12px; font-weight: 900; }
+.webhook-events-card { max-width: 1180px; margin: 18px auto 0; }
+.webhook-event-list { display: grid; gap: 10px; }
+.webhook-event { border: 1px solid #e9e3f4; border-radius: 13px; background: #fbfaff; overflow: hidden; }
+.webhook-event summary { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; padding: 13px 15px; cursor: pointer; list-style: none; }
+.webhook-event summary::-webkit-details-marker { display: none; }
+.webhook-event time { color: #81798f; font-size: 12px; font-weight: 700; }
+.webhook-event pre { margin: 0; border-top: 1px solid #e9e3f4; background: #24202e; padding: 15px; color: #e8e1ff; font-size: 12px; overflow: auto; }
 .settings-members-card { grid-column: 1 / -1; }
 .member-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .member-row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: center; border: 1px solid #e9e3f4; border-radius: 15px; background: #fbfaff; padding: 14px; }

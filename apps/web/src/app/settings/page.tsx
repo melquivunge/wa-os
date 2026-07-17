@@ -1,4 +1,4 @@
-import { ArrowRight, CheckCircle2, Clock3, KeyRound, LockKeyhole, PlugZap, ShieldCheck } from "lucide-react";
+import { ArrowRight, CheckCircle2, Clock3, KeyRound, LockKeyhole, PlugZap, RadioTower, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { MemberManagement } from "@/app/settings/member-management";
@@ -65,6 +65,7 @@ export default async function SettingsPage() {
               <div><KeyRound aria-hidden="true" size={18} /><span>Credenciais</span><b>Não armazenadas</b></div>
             </div>
             <Link className="panel-link settings-integration-link" href="/settings/integrations">Gerenciar contas e validar canal <ArrowRight size={15} /></Link>
+            <Link className="panel-link settings-integration-link" href="/settings/webhooks"><RadioTower size={15} /> Ver eventos do webhook <ArrowRight size={15} /></Link>
           </article>
 
           <MemberManagement

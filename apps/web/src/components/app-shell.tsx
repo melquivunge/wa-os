@@ -14,6 +14,7 @@ import {
   Settings,
   Sparkles,
   Smartphone,
+  RadioTower,
   UsersRound,
 } from "lucide-react";
 import Link from "next/link";
@@ -27,6 +28,7 @@ const navItems = [
   { label: "Templates", icon: FileText, href: "/templates" },
   { label: "Analytics", icon: BarChart3, href: "/analytics" },
   { label: "Integrações", icon: Smartphone, href: "/settings/integrations" },
+  { label: "Webhooks", icon: RadioTower, href: "/settings/webhooks" },
 ];
 
 type AppShellProps = {
